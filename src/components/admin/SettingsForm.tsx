@@ -32,10 +32,10 @@ export function SettingsForm({ action, groups, values }: { action: (s: FormState
                   <ImageField name={f.key} value={values[f.key]} label={f.label} />
                 </div>
               ) : (
-                <label key={f.key} className={`field${f.type === "textarea" ? " full" : ""}`}>
+                <label key={f.key} className={`field${f.type === "textarea" || f.type === "lista" ? " full" : ""}`}>
                   <span>{f.label}</span>
-                  {f.type === "textarea" ? (
-                    <textarea name={f.key} className="textarea" defaultValue={values[f.key]} rows={3} />
+                  {f.type === "textarea" || f.type === "lista" ? (
+                    <textarea name={f.key} className="textarea" defaultValue={values[f.key]} rows={f.type === "lista" ? 6 : 3} />
                   ) : (
                     <input name={f.key} className="input" defaultValue={values[f.key]} />
                   )}

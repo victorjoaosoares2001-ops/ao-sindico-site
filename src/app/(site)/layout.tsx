@@ -44,10 +44,12 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
               <h4>Portal</h4>
               <ul>
                 <li><Link href="/fornecedores">Fornecedores</Link></li>
-                <li><Link href="/fornecedores?categoria=sindico-profissional">Síndicos profissionais</Link></li>
+                <li><Link href="/sindicos-profissionais">Síndicos profissionais</Link></li>
                 <li><Link href="/informe-se">Informe-se</Link></li>
-                <li><Link href="/eventos">Eventos</Link></li>
-                <li><Link href="/cursos">Cursos</Link></li>
+                <li><Link href="/tira-duvidas">Tira-Dúvidas</Link></li>
+                <li><Link href="/colunistas">Colunistas</Link></li>
+                <li><Link href="/videos">Vídeos</Link></li>
+                <li><Link href="/eventos">Eventos e cursos</Link></li>
               </ul>
             </div>
             <div>
@@ -57,6 +59,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
                 <li><Link href="/anuncie">Anuncie</Link></li>
                 <li><Link href="/parceiros">Parceiros</Link></li>
                 <li><Link href="/anuncie?contato=1">Fale conosco</Link></li>
+                <li><Link href="/busca">Buscar no portal</Link></li>
               </ul>
             </div>
             <div>
@@ -84,7 +87,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           </div>
           <div className="footer__bottom">
             <span>© {new Date().getFullYear()} Ao Síndico. Todos os direitos reservados.</span>
-            <Link href="/admin">Área da equipe</Link>
+            <Link href="/admin">Entrar · área da equipe</Link>
           </div>
           <div className="footer__giant" aria-hidden="true">
             AoSindico.com

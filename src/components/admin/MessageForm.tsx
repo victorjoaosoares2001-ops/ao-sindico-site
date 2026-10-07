@@ -9,24 +9,32 @@ type Supplier = { id: string; name: string; city: string | null; categories: str
 const STATUSES = [
   { value: "novo", label: "Responder (novo)" },
   { value: "andamento", label: "Em andamento" },
-  { value: "respondido", label: "Respondido" },
+  { value: "respondido", label: "Respondido / concluído" },
   { value: "arquivado", label: "Arquivado" },
 ];
+
+const norm = (s: string | null | undefined) => (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
 export function MessageForm({
   action,
   status,
   notes,
+  assignedTo,
+  team,
   isQuote,
   category,
+  city,
   selected,
   suppliers,
 }: {
   action: (s: FormState, f: FormData) => Promise<FormState>;
   status: string;
   notes: string;
+  assignedTo: string;
+  team: string[];
   isQuote: boolean;
   category: string | null;
+  city: string | null;
   selected: string[];
   suppliers: Supplier[];
 }) {
@@ -34,17 +42,18 @@ export function MessageForm({
   const [filter, setFilter] = useState("");
   const [picked, setPicked] = useState(new Set(selected));
 
-  // já relacionadas e da mesma categoria do pedido aparecem primeiro (ordem fixa, não pula ao marcar)
+  // já relacionadas, mesma categoria e mesma cidade primeiro (ordem fixa: não pula ao marcar)
   const list = useMemo(() => {
-    const f = filter.trim().toLowerCase();
-    const score = (s: Supplier) => (selected.includes(s.id) ? 2 : 0) + (category && s.categories.includes(category) ? 1 : 0);
+    const f = norm(filter);
+    const score = (s: Supplier) =>
+      (selected.includes(s.id) ? 4 : 0) + (category && s.categories.includes(category) ? 2 : 0) + (city && norm(s.city) === norm(city) ? 1 : 0);
     return suppliers
-      .filter((s) => !f || s.name.toLowerCase().includes(f) || s.categories.some((c) => c.toLowerCase().includes(f)) || s.city?.toLowerCase().includes(f))
+      .filter((s) => !f || norm(s.name).includes(f) || s.categories.some((c) => norm(c).includes(f)) || norm(s.city).includes(f))
       .sort((a, b) => score(b) - score(a));
-  }, [filter, suppliers, category, selected]);
+  }, [filter, suppliers, category, city, selected]);
 
   return (
-    <form action={formAction} className="panel panel__pad" style={{ display: "grid", gap: 18, alignSelf: "start" }}>
+    <form action={formAction} className="panel panel__pad" style={{ display: "grid", gap: 18, alignSelf: "start", position: "sticky", top: 16 }}>
       <label className="field">
         <span>Situação</span>
         <select name="status" className="select" defaultValue={status}>
@@ -56,14 +65,23 @@ export function MessageForm({
         </select>
       </label>
       <label className="field">
+        <span>Responsável</span>
+        <select name="assignedTo" className="select" defaultValue={assignedTo}>
+          <option value="">— Ninguém ainda —</option>
+          {team.map((t) => (
+            <option key={t}>{t}</option>
+          ))}
+        </select>
+      </label>
+      <label className="field">
         <span>Observações internas</span>
-        <textarea name="notes" className="textarea" defaultValue={notes} placeholder="Ex.: liguei dia 10, pediu retorno na segunda. (Só a equipe vê.)" rows={4} />
+        <textarea name="notes" className="textarea" defaultValue={notes} placeholder="Só a equipe vê." rows={4} />
       </label>
 
       {isQuote && (
         <div className="field">
           <span>Empresas relacionadas ({picked.size})</span>
-          <input className="input" placeholder="Filtrar empresas…" value={filter} onChange={(e) => setFilter(e.target.value)} style={{ minHeight: 42 }} />
+          <input className="input" placeholder="Filtrar por nome, categoria ou cidade…" value={filter} onChange={(e) => setFilter(e.target.value)} style={{ minHeight: 42 }} />
           <div className="sup-pick">
             {list.map((s) => (
               <label key={s.id}>
@@ -79,14 +97,16 @@ export function MessageForm({
                   }}
                 />
                 {s.name}
-                <small>{category && s.categories.includes(category) ? "★ mesma categoria" : s.city ?? ""}</small>
+                <small>
+                  {category && s.categories.includes(category) ? "★ mesma categoria" : ""}
+                  {city && norm(s.city) === norm(city) ? " · mesma cidade" : !category || !s.categories.includes(category) ? (s.city ?? "") : ""}
+                </small>
               </label>
             ))}
           </div>
           {[...picked].map((id) => (
             <input key={id} type="hidden" name="suppliers" value={id} />
           ))}
-          <span className="hint">Marque as empresas e salve. Depois envie o pedido a cada uma pelos botões ao lado.</span>
         </div>
       )}
 

@@ -14,7 +14,7 @@ export function AdminShell({
   groups,
   children,
 }: {
-  user: { name: string; email: string };
+  user: { name: string; email: string; roleLabel?: string };
   groups: { title: string; items: Item[] }[];
   children: React.ReactNode;
 }) {
@@ -55,11 +55,14 @@ export function AdminShell({
           <a href="/" target="_blank" rel="noopener">
             <Icon name="globe" /> Ver o site
           </a>
+          <Link href="/admin/conta">
+            <Icon name="key" /> Minha conta e senha
+          </Link>
           <div className="adm-user">
             <span className="adm-avatar">{initials}</span>
             <span>
               <b>{user.name}</b>
-              {user.email}
+              {user.roleLabel ?? user.email}
             </span>
           </div>
           <form action={logout}>

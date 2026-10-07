@@ -4,7 +4,8 @@ import type { Prisma } from "@prisma/client";
 import { Icon } from "@/components/Icon";
 import { SupplierCard } from "@/components/site/Cards";
 import { db } from "@/lib/db";
-import { activeCampaigns, publishedCategories, supplierCardInclude } from "@/lib/queries";
+import { redirect } from "next/navigation";
+import { activeCampaigns, adHref, PRO_SLUG, publishedCategories, ratings, supplierCardInclude } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Fornecedores para condomínios",
@@ -17,6 +18,7 @@ type SP = Promise<{ q?: string; categoria?: string; cidade?: string; ordem?: str
 
 export default async function SuppliersPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
+  if (sp.categoria === PRO_SLUG) redirect("/sindicos-profissionais");
   const q = sp.q?.trim() ?? "";
   const city = sp.cidade?.trim() ?? "";
   const page = Math.max(1, Number(sp.pagina) || 1);
@@ -25,7 +27,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
 
   const where: Prisma.SupplierWhereInput = {
     published: true,
-    ...(current ? { categories: { some: { id: current.id } } } : {}),
+    ...(current ? { categories: { some: { id: current.id } } } : { categories: { none: { slug: PRO_SLUG } } }),
     ...(city ? { city: { contains: city, mode: "insensitive" } } : {}),
     ...(q
       ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { services: { contains: q, mode: "insensitive" } }, { description: { contains: q, mode: "insensitive" } }, { tagline: { contains: q, mode: "insensitive" } }] }
@@ -40,6 +42,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
     activeCampaigns("fornecedores", 1),
   ]);
   const pages = Math.ceil(total / PER_PAGE);
+  const rate = await ratings(suppliers.map((s) => s.id));
 
   const qs = (patch: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
@@ -119,7 +122,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
           </div>
 
           {ads[0]?.image && (
-            <a href={ads[0].link ?? "#"} className="ad" style={{ display: "block", marginBottom: 24, aspectRatio: "auto" }} target="_blank" rel="noopener sponsored">
+            <a href={ads[0].link ? adHref(ads[0].id) : "#"} className="ad" style={{ display: "block", marginBottom: 24, aspectRatio: "auto" }} target="_blank" rel="noopener sponsored">
               <img src={ads[0].image} alt={ads[0].title} loading="lazy" />
               <span className="chip chip--glass ad__label">Publicidade</span>
             </a>
@@ -128,7 +131,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
           {suppliers.length > 0 ? (
             <div className="sup-grid">
               {suppliers.map((s, i) => (
-                <SupplierCard key={s.id} s={s} delay={(i % 3) * 0.05} />
+                <SupplierCard key={s.id} s={s} rating={rate.get(s.id)} delay={(i % 3) * 0.05} />
               ))}
             </div>
           ) : (

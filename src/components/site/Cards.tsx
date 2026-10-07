@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Article, ArticleSection, Course, Event, Supplier } from "@prisma/client";
+import type { Article, ArticleSection, Author, Course, Event, Supplier } from "@prisma/client";
 import { Icon } from "@/components/Icon";
 import { dayMonth, formatDate } from "@/lib/format";
 
@@ -19,7 +19,7 @@ export function initials(name: string) {
     .join("");
 }
 
-export function SupplierCard({ s, delay = 0 }: { s: SupplierWithCats; delay?: number }) {
+export function SupplierCard({ s, delay = 0, rating }: { s: SupplierWithCats; delay?: number; rating?: { avg: number; count: number } }) {
   const badge = PLAN_BADGE[s.plan];
   // sem foto de capa: o próprio logo vira a imagem do cartão
   const logoAsCover = !s.cover && !!s.logo;
@@ -45,6 +45,11 @@ export function SupplierCard({ s, delay = 0 }: { s: SupplierWithCats; delay?: nu
         <h3>
           <Link href={`/fornecedores/${s.slug}`}>{s.name}</Link>
         </h3>
+        {rating && rating.count > 0 && (
+          <span className="sup-card__rating">
+            <b>★ {rating.avg.toFixed(1)}</b> · {rating.count} {rating.count === 1 ? "avaliação" : "avaliações"}
+          </span>
+        )}
         {(s.tagline || s.description) && <p className="sup-card__text">{s.tagline || s.description}</p>}
         <div className="sup-card__foot">
           <span className="sup-card__loc">
@@ -64,7 +69,7 @@ export function SupplierCard({ s, delay = 0 }: { s: SupplierWithCats; delay?: nu
   );
 }
 
-type ArticleWithSection = Article & { section: ArticleSection | null };
+type ArticleWithSection = Article & { section: ArticleSection | null; authorRef?: Author | null };
 
 export function PostCard({ a, delay = 0 }: { a: ArticleWithSection; delay?: number }) {
   return (
@@ -74,6 +79,7 @@ export function PostCard({ a, delay = 0 }: { a: ArticleWithSection; delay?: numb
         <div className="meta">
           {a.section && <b>{a.section.name}</b>}
           <span>{formatDate(a.publishedAt)}</span>
+          {a.authorRef && <span>· {a.authorRef.name}</span>}
         </div>
         <h3>{a.title}</h3>
       </div>

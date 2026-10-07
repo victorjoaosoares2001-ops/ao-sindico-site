@@ -4,6 +4,7 @@ import { db } from "./db";
 /**
  * Textos e contatos editáveis em /admin/conteudo.
  * Cada chave tem rótulo e valor padrão; o banco guarda só o que foi alterado.
+ * type "lista": um item por linha.
  */
 export const SETTING_GROUPS = [
   {
@@ -17,24 +18,9 @@ export const SETTING_GROUPS = [
         key: "hero_subtitle",
         label: "Texto de apoio",
         type: "textarea",
-        default:
-          "Receba orçamentos das melhores empresas para o seu condomínio, acompanhe notícias, cursos e eventos. Usado por mais de 30 mil síndicos e gestores — grátis, prático e seguro.",
+        default: "Receba orçamentos de empresas especializadas para o seu condomínio, acompanhe notícias, cursos e eventos. Grátis, prático e seguro.",
       },
       { key: "hero_image", label: "Imagem de fundo do topo (opcional)", type: "image", default: "" },
-    ],
-  },
-  {
-    title: "Números de destaque",
-    hint: "Aparecem logo abaixo do topo.",
-    fields: [
-      { key: "stat1_value", label: "Número 1", default: "+30 mil" },
-      { key: "stat1_label", label: "Legenda 1", default: "síndicos e gestores" },
-      { key: "stat2_value", label: "Número 2", default: "+500" },
-      { key: "stat2_label", label: "Legenda 2", default: "fornecedores cadastrados" },
-      { key: "stat3_value", label: "Número 3", default: "8" },
-      { key: "stat3_label", label: "Legenda 3", default: "encontros de síndicos realizados" },
-      { key: "stat4_value", label: "Número 4", default: "100%" },
-      { key: "stat4_label", label: "Legenda 4", default: "gratuito para o síndico" },
     ],
   },
   {
@@ -48,12 +34,13 @@ export const SETTING_GROUPS = [
       { key: "facebook", label: "Facebook (link)", default: "" },
       { key: "linkedin", label: "LinkedIn (link)", default: "" },
       { key: "youtube", label: "YouTube (link)", default: "" },
+      { key: "whatsapp_group", label: "Grupo de WhatsApp dos síndicos (link)", default: "" },
       { key: "address", label: "Endereço / região", default: "São Paulo · SP" },
     ],
   },
   {
     title: "Anuncie",
-    hint: "Página para empresas que querem anunciar.",
+    hint: "Página para empresas que querem anunciar e bloco no fim da página inicial.",
     fields: [
       { key: "advertise_title", label: "Título", default: "Coloque sua empresa na frente de quem decide." },
       {
@@ -61,7 +48,27 @@ export const SETTING_GROUPS = [
         label: "Texto",
         type: "textarea",
         default:
-          "Síndicos, administradoras e gestores consultam o Ao Síndico todos os dias para encontrar fornecedores. Anuncie no portal, patrocine nossos encontros e receba pedidos de orçamento qualificados.",
+          "Síndicos, administradoras e gestores consultam o Ao Síndico para encontrar fornecedores. Anuncie no portal, patrocine nossos encontros e receba pedidos de orçamento.",
+      },
+      {
+        key: "advertise_formats",
+        label: "Formatos oferecidos (um por linha)",
+        type: "lista",
+        default:
+          "Perfil no guia de fornecedores, com selo Verificado ou Premium\nBanner na página inicial, nas matérias e no guia\nPedidos de orçamento encaminhados pela nossa equipe\nPatrocínio dos Encontros de Síndicos\nMatéria patrocinada e coluna própria",
+      },
+    ],
+  },
+  {
+    title: "Síndicos profissionais",
+    hint: "Página /sindicos-profissionais.",
+    fields: [
+      { key: "pro_title", label: "Título", default: "Encontre um síndico profissional para o seu condomínio." },
+      {
+        key: "pro_text",
+        label: "Texto",
+        type: "textarea",
+        default: "Conheça profissionais que atuam na gestão de condomínios residenciais e comerciais. Compare perfis e peça uma proposta sem compromisso.",
       },
     ],
   },
@@ -79,8 +86,7 @@ export const SETTING_GROUPS = [
         key: "seo_description",
         label: "Descrição para o Google",
         type: "textarea",
-        default:
-          "Ao Síndico: orçamentos gratuitos com fornecedores para condomínios, notícias, cursos e eventos para síndicos e gestores.",
+        default: "Ao Síndico: orçamentos gratuitos com fornecedores para condomínios, notícias, Tira-Dúvidas, cursos e eventos para síndicos e gestores.",
       },
     ],
   },
@@ -90,9 +96,7 @@ type Field = (typeof SETTING_GROUPS)[number]["fields"][number];
 export type SettingKey = Field["key"];
 export type Settings = Record<SettingKey, string>;
 
-export const SETTING_DEFAULTS = Object.fromEntries(
-  SETTING_GROUPS.flatMap((g) => g.fields.map((f) => [f.key, f.default])),
-) as Settings;
+export const SETTING_DEFAULTS = Object.fromEntries(SETTING_GROUPS.flatMap((g) => g.fields.map((f) => [f.key, f.default]))) as Settings;
 
 export const getSettings = cache(async (): Promise<Settings> => {
   const rows = await db.siteSetting.findMany();
@@ -100,3 +104,9 @@ export const getSettings = cache(async (): Promise<Settings> => {
   for (const r of rows) if (r.key in out) out[r.key as SettingKey] = r.value;
   return out;
 });
+
+export const lines = (s: string) =>
+  s
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);

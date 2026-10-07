@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { STATUS_LABEL, TYPE_LABEL } from "../../messages";
 
-export const metadata = { title: "Mensagens" };
+export const metadata = { title: "Orçamentos e mensagens" };
 
 type SP = Promise<{ aba?: string; tipo?: string; q?: string; ok?: string }>;
 
@@ -20,7 +20,7 @@ const TABS = [
 ] as const;
 
 export default async function MessagesPage({ searchParams }: { searchParams: SP }) {
-  await requireAdmin();
+  await requireAdmin("mensagens");
   const sp = await searchParams;
   const aba = sp.aba ?? "responder";
 
@@ -122,7 +122,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: SP 
                   )}
                 </span>
                 <span className="msg-row__text">
-                  {[m.subject, m.company, m.city].filter(Boolean).join(" · ")}
+                  {[m.subject, m.company, m.city, m.assignedTo ? `Resp.: ${m.assignedTo}` : null].filter(Boolean).join(" · ")}
                   {m.body ? ` — ${m.body}` : ""}
                 </span>
               </span>
@@ -147,7 +147,7 @@ function Header({ aba, counts }: { aba: string; counts: Record<string, number> }
     <>
       <div className="adm-head">
         <div>
-          <h1>Mensagens</h1>
+          <h1>Orçamentos e mensagens</h1>
           <p>Tudo o que chega pelo site: pedidos de orçamento, empresas que querem anunciar e contatos.</p>
         </div>
       </div>

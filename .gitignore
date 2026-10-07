@@ -10,3 +10,6 @@ uploads/*
 !uploads/.gitkeep
 .vercel
 .env*.local
+.pgdata
+CONVITE-*.txt
+deploy-*.log

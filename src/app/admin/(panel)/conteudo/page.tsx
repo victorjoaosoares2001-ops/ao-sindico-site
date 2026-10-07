@@ -6,7 +6,7 @@ import { getSettings, SETTING_GROUPS } from "@/lib/settings";
 export const metadata = { title: "Textos do site" };
 
 export default async function ContentPage() {
-  await requireAdmin();
+  await requireAdmin("site");
   const values = await getSettings();
   const groups = SETTING_GROUPS.map((g) => ({
     title: g.title,

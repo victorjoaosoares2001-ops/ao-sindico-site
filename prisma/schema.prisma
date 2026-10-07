@@ -11,12 +11,57 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+// ---------- Equipe, acesso e histórico ----------
+
 model AdminUser {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
+  id             String       @id @default(cuid())
+  name           String
+  email          String       @unique
+  passwordHash   String
+  role           String       @default("admin") // dono | admin | comercial | editor
+  active         Boolean      @default(true)
+  sessionVersion Int          @default(0) // muda ao trocar senha: derruba sessões antigas
+  failedLogins   Int          @default(0)
+  lockedUntil    DateTime?
+  lastLoginAt    DateTime?
+  createdAt      DateTime     @default(now())
+  tokens         AdminToken[]
+}
+
+/// Convites e redefinições de senha. Guardamos só o hash do token.
+model AdminToken {
+  id          String     @id @default(cuid())
+  tokenHash   String     @unique
+  kind        String // convite | senha
+  email       String
+  name        String?
+  role        String?
+  userId      String?
+  user        AdminUser? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdBy   String?
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime   @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userName  String
+  action    String // criou | editou | removeu | publicou | ocultou | entrou | ...
+  entity    String // fornecedores, anuncios, mensagens...
+  entityId  String?
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+/// Etapas de importação de dados já executadas (rodam uma única vez).
+model DataImport {
+  name      String   @id
+  createdAt DateTime @default(now())
 }
 
 // ---------- Fornecedores ----------
@@ -26,7 +71,7 @@ model Category {
   name        String
   slug        String     @unique
   description String?
-  icon        String? // nome do ícone (ver src/components/Icon.tsx)
+  icon        String?
   order       Int        @default(0)
   published   Boolean    @default(true)
   suppliers   Supplier[]
@@ -35,30 +80,49 @@ model Category {
 }
 
 model Supplier {
-  id          String       @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
-  slug        String       @unique
+  slug        String          @unique
   tagline     String?
   description String?
-  services    String? // separados por vírgula
+  services    String?
   logo        String?
   cover       String?
   city        String?
   state       String?
+  address     String?
   phone       String?
   whatsapp    String?
   email       String?
   website     String?
   instagram   String?
-  plan        String       @default("basico") // basico | verificado | premium
-  featured    Boolean      @default(false)
-  published   Boolean      @default(true)
-  order       Int          @default(0)
+  facebook    String?
+  plan        String          @default("basico") // basico | verificado | premium
+  featured    Boolean         @default(false)
+  published   Boolean         @default(true)
+  order       Int             @default(0)
+  notes       String? // observações internas do comercial
   categories  Category[]
   campaigns   Campaign[]
+  reviews     Review[]
   quoteLinks  QuoteSupplier[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  contacts    QuoteContact[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  name       String
+  email      String?
+  condo      String?
+  rating     Int
+  comment    String?
+  status     String   @default("pendente") // pendente | aprovada | rejeitada
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // ---------- Anúncios / campanhas ----------
@@ -68,27 +132,49 @@ model Campaign {
   title      String
   image      String?
   link       String?
-  placement  String    @default("home") // home | faixa | materia | fornecedores
+  placement  String    @default("home") // ver src/lib/placements.ts
   startsAt   DateTime?
   endsAt     DateTime?
   published  Boolean   @default(true)
-  order      Int       @default(0)
+  order      Int       @default(0) // prioridade: maior aparece primeiro
+  clicks     Int       @default(0)
   supplierId String?
   supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
 
-// ---------- Conteúdo ----------
+// ---------- Conteúdo editorial ----------
+
+model Author {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  role      String? // ex.: Advogado condominial
+  bio       String?
+  photo     String?
+  email     String?
+  instagram String?
+  linkedin  String?
+  website   String?
+  published Boolean    @default(true)
+  order     Int        @default(0)
+  articles  Article[]
+  answers   Question[]
+  videos    Video[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
 
 model ArticleSection {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  slug      String    @unique
-  order     Int       @default(0)
+  slug      String     @unique
+  order     Int        @default(0)
   articles  Article[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  questions Question[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 model Article {
@@ -98,8 +184,10 @@ model Article {
   excerpt     String?
   content     String?
   cover       String?
-  author      String?
-  authorBio   String?
+  author      String? // legado (texto); use authorId
+  authorBio   String? // legado
+  authorId    String?
+  authorRef   Author?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
   sectionId   String?
   section     ArticleSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   featured    Boolean         @default(false)
@@ -110,6 +198,43 @@ model Article {
   updatedAt   DateTime        @updatedAt
 }
 
+/// Tira-Dúvidas: perguntas dos leitores respondidas por especialistas.
+model Question {
+  id          String          @id @default(cuid())
+  title       String
+  slug        String          @unique
+  body        String?
+  askerName   String
+  askerEmail  String?
+  askerCity   String?
+  answer      String?
+  authorId    String?
+  author      Author?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  sectionId   String?
+  section     ArticleSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  status      String          @default("pendente") // pendente | publicada | rejeitada
+  published   Boolean         @default(false)
+  views       Int             @default(0)
+  answeredAt  DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  url         String // link do YouTube
+  description String?
+  authorId    String?
+  author      Author?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  featured    Boolean  @default(false)
+  published   Boolean  @default(true)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Course {
   id          String    @id @default(cuid())
   title       String
@@ -117,7 +242,7 @@ model Course {
   excerpt     String?
   description String?
   cover       String?
-  mode        String    @default("online") // online | presencial | hibrido
+  mode        String    @default("online")
   startsAt    DateTime?
   workload    String?
   price       String?
@@ -129,19 +254,42 @@ model Course {
 }
 
 model Event {
-  id          String    @id @default(cuid())
-  title       String
-  slug        String    @unique
-  excerpt     String?
-  description String?
-  cover       String?
-  startsAt    DateTime?
-  venue       String?
-  city        String?
-  link        String?
-  published   Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id               String              @id @default(cuid())
+  title            String
+  slug             String              @unique
+  excerpt          String?
+  description      String?
+  cover            String?
+  startsAt         DateTime?
+  venue            String?
+  address          String?
+  city             String?
+  link             String? // inscrição externa (opcional)
+  registrationOpen Boolean             @default(true)
+  capacity         Int?
+  certificateUrl   String? // link do certificado, liberado para quem participou
+  published        Boolean             @default(true)
+  sponsors         Partner[]           @relation("EventSponsors")
+  registrations    EventRegistration[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+}
+
+model EventRegistration {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  phone     String?
+  role      String? // síndico, subsíndico, conselheiro, administradora, fornecedor...
+  condo     String?
+  city      String?
+  units     String?
+  attended  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, email])
 }
 
 model Partner {
@@ -153,6 +301,7 @@ model Partner {
   kind        String   @default("parceiro") // parceiro | patrocinador | apoio
   order       Int      @default(0)
   published   Boolean  @default(true)
+  events      Event[]  @relation("EventSponsors")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -165,24 +314,34 @@ model SiteSetting {
 // ---------- Mensagens (orçamentos, anunciantes, contato) ----------
 
 model Message {
-  id         String          @id @default(cuid())
-  type       String          @default("orcamento") // orcamento | anunciar | contato
-  status     String          @default("novo") // novo | andamento | respondido | arquivado
-  name       String
-  email      String?
-  phone      String?
-  company    String? // condomínio ou empresa
-  city       String?
-  category   String?
-  subject    String?
-  body       String?
-  urgency    String?
-  units      String?
-  notes      String? // observações internas
-  source     String? // página de origem
-  suppliers  QuoteSupplier[]
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id             String          @id @default(cuid())
+  type           String          @default("orcamento") // orcamento | anunciar | contato
+  status         String          @default("novo") // novo | andamento | respondido | arquivado
+  name           String
+  email          String?
+  phone          String?
+  contactRole    String? // síndico, administradora, morador...
+  company        String? // condomínio ou empresa
+  condoType      String? // residencial | comercial | misto
+  units          String?
+  city           String?
+  state          String?
+  neighborhood   String?
+  category       String?
+  subject        String?
+  body           String?
+  urgency        String?
+  budget         String?
+  preferredTime  String?
+  notes          String?
+  source         String?
+  assignedTo     String? // nome de quem está cuidando
+  suppliers      QuoteSupplier[]
+  contacts       QuoteContact[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([status, type])
 }
 
 model QuoteSupplier {
@@ -194,6 +353,19 @@ model QuoteSupplier {
   supplier   Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
 
   @@id([messageId, supplierId])
+}
+
+/// Registro de cada contato feito pela equipe (com o síndico ou com uma empresa).
+model QuoteContact {
+  id         String    @id @default(cuid())
+  messageId  String
+  message    Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  channel    String // whatsapp | email | telefone | outro
+  note       String?
+  userName   String
+  createdAt  DateTime  @default(now())
 }
 
 model Subscriber {

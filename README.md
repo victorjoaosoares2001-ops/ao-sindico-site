@@ -1,48 +1,68 @@
-# Ao Síndico — site + painel
+# Ao Síndico — portal + painel da equipe
 
-Novo site do portal **Ao Síndico** (conteúdo, fornecedores, cursos/eventos, parceiros e
-pedidos de orçamento) com um **painel da equipe** em `/admin` onde tudo é cadastrado sem
-depender de desenvolvedor.
+Portal do mercado condominial (fornecedores, síndicos profissionais, Informe-se, Tira-Dúvidas,
+vídeos, eventos com inscrição, cursos, parceiros e pedidos de orçamento) com **painel da equipe**
+em `/admin` para operar tudo sem desenvolvedor.
 
-Stack: Next.js 15 (App Router, TypeScript) · Prisma · SQLite local (Postgres/MySQL em produção) ·
-CSS próprio (sem framework) · sem serviços pagos.
+Stack: Next.js 15 (App Router, TypeScript) · Prisma · Postgres (Neon) · Vercel Blob · CSS próprio.
 
-## Rodar
+## Rodar localmente
 
 ```bash
 npm install
-cp .env.example .env      # ajuste AUTH_SECRET e ADMIN_PASSWORD
-npm run setup             # cria o banco e carrega o conteúdo inicial + 1º acesso
-npm run dev               # http://localhost:3000  ·  painel: /admin
+cp .env.example .env            # aponte DATABASE_URL para o Postgres local abaixo
+npm run db:local                # Postgres local (porta 5433), deixe rodando
+npm run db:push                 # cria as tabelas
+npm run db:steps                # conteúdo inicial + acervo + convite da dona (link no terminal)
+npm run dev                     # http://localhost:3000 · painel: /admin
 ```
 
-Build de produção: `npm run build && npm start`. Checagem de tipos: `npm run typecheck`.
+## Acesso ao painel (sem cadastro público)
 
-## Como está organizado
+- Não existe tela pública de criação de conta. **Todo acesso nasce de um convite** de uso único (72h).
+- **Primeiro acesso (dona):** enquanto não existir dona/dono ativo, cada deploy gera um convite e o
+  imprime **somente no log do build** (`[CONVITE-DONA] …`). Quem administra a Vercel abre o log e usa o link.
+- **Equipe:** em *Equipe e acessos* a dona/administração gera convites com perfil e links de nova senha
+  (WhatsApp ou copiar). “Esqueci minha senha” no login avisa a administração no painel.
+- **Emergência:** `npm run admin:convite -- email@x.com "Nome" dono` (precisa de acesso ao banco).
+- Segurança: senhas bcrypt; sessão assinada (12h) que cai ao trocar senha/perfil; bloqueio de 15 min
+  após 5 tentativas erradas; histórico de ações; painel com `noindex` e `no-store`.
+
+| Perfil | Pode usar |
+| --- | --- |
+| Dona/dono | tudo, inclusive equipe e perfis |
+| Administração | tudo, menos promover alguém a dono |
+| Comercial | orçamentos/mensagens, fornecedores, anúncios, parceiros, avaliações, agenda |
+| Conteúdo | matérias, autores, seções, Tira-Dúvidas, vídeos, eventos e cursos |
+
+## Fluxo comercial (prioridade da cliente)
+
+Empresa fechada → *Fornecedores → Novo* → no perfil da empresa, **Novo anúncio desta empresa** →
+imagem, link, posição (com tamanho recomendado), período, prioridade e ativo → aparece no site sozinho
+nas datas definidas. Cliques são contados (`/anuncio/:id`). O painel avisa anúncios que vencem em 7 dias.
+
+## Orçamentos (substitui a plataforma externa)
+
+Formulário em 5 etapas (necessidade, condomínio, detalhes, contato, revisão) → *Orçamentos e mensagens*:
+situação, responsável, observações, empresas sugeridas pela categoria/cidade, envio com texto pronto
+por WhatsApp/e-mail, “marcar como enviado”, registro de cada contato e histórico completo.
+
+## Estrutura
 
 | Onde | O quê |
 | --- | --- |
-| `prisma/schema.prisma` | Tabelas: fornecedores, categorias, anúncios, matérias, seções, cursos, eventos, parceiros, mensagens, textos do site, equipe |
-| `prisma/seed-content.ts` | Conteúdo migrado do site atual (imagens ainda apontam para aosindico.com) |
-| `src/app/(site)` | Páginas públicas |
-| `src/app/admin` | Painel (login, início, mensagens, cadastros, textos, equipe) |
-| `src/admin/resources.ts` | **Definição dos cadastros do painel** — campos e rótulos em português. Listagem, formulário e gravação são gerados daqui |
-| `src/admin/actions.ts` | Ações do painel (salvar, publicar, mensagens, equipe) |
-| `src/lib/public-actions.ts` | Formulários públicos (orçamento, anuncie/contato, newsletter) |
-| `src/lib/settings.ts` | Textos editáveis em “Textos do site” |
+| `prisma/schema.prisma` | Modelo de dados |
+| `prisma/data-steps.ts` | Etapas de dados por deploy (cada uma roda 1 vez por banco) |
+| `prisma/acervo/*.json` | Acervo migrado do site antigo (`npm run acervo`) |
+| `src/admin/resources.ts` | Cadastros do painel (campos em português; listagem/formulário gerados daqui) |
+| `src/admin/actions.ts` | Ações do painel (permissões, histórico, convites, orçamentos) |
+| `src/lib/permissions.ts` | Perfis e módulos |
+| `src/lib/public-actions.ts` | Formulários públicos |
+| `src/lib/placements.ts` | Posições de anúncio |
 
-Novo cadastro: crie o model no schema, rode `npm run db:push` e adicione um item em `RESOURCES`.
+## Produção (Vercel)
 
-## Fluxo de mensagens (substitui a plataforma externa)
-
-1. O síndico pede orçamento no site (início, `/orcamento` ou página do fornecedor) — ou uma empresa pede para anunciar (`/anuncie`).
-2. Cai em **Painel → Mensagens → Responder**.
-3. A funcionária abre, relaciona as empresas, envia o pedido a cada uma pelo WhatsApp/e-mail com texto pronto e marca “enviado”.
-4. Muda para **Respondido** e registra observações internas.
-
-## Produção
-
-- **Banco:** troque `provider` em `schema.prisma` para `postgresql` (ou `mysql`) e defina `DATABASE_URL`; depois `npx prisma db push && npm run db:seed`.
-- **Imagens enviadas:** ficam em `UPLOAD_DIR` (padrão `./uploads`) e são servidas em `/uploads/...`. O servidor precisa de disco persistente (VPS/hospedagem Node). Em hospedagem sem disco (ex.: Vercel), troque `src/lib/upload.ts` por um storage (S3, R2, Vercel Blob).
-- **Segurança:** gere um `AUTH_SECRET` novo e troque a senha inicial em Painel → Equipe e senha.
-- `SITE_URL` com o domínio final (sitemap e SEO).
+`vercel-build` = `prisma generate && prisma db push && tsx prisma/data-steps.ts && next build`.
+Variáveis criadas pela Vercel: `DATABASE_URL`, `DATABASE_URL_UNPOOLED` (Neon) e `BLOB_READ_WRITE_TOKEN` (Blob).
+Opcionais: `SITE_URL` (domínio final), `AUTH_SECRET`, `OWNER_EMAIL`.
+Endereços do site antigo (`/informe/…`, `/fornecedor/…`, `/tiraduvidas/…`, `/colunista/…`) redirecionam para os novos.

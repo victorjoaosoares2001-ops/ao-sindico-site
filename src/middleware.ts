@@ -1,13 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 // Barreira rápida: sem cookie de sessão, vai para o login.
-// A assinatura do cookie é conferida no servidor (requireAdmin) em cada página e ação.
+// A assinatura, a versão da sessão e a permissão são conferidas no servidor em cada página e ação.
+const PUBLIC = ["/admin/login", "/admin/convite/"];
+
 export function middleware(req: NextRequest) {
-  if (req.nextUrl.pathname.startsWith("/admin/login")) return NextResponse.next();
-  if (!req.cookies.get("as_session")) {
-    return NextResponse.redirect(new URL("/admin/login", req.url));
-  }
-  return NextResponse.next();
+  const { pathname } = req.nextUrl;
+  const res = PUBLIC.some((p) => pathname.startsWith(p))
+    ? NextResponse.next()
+    : req.cookies.get("as_session")
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL("/admin/login", req.url));
+  // painel nunca é indexado nem vai para cache compartilhado
+  res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  res.headers.set("Cache-Control", "no-store");
+  res.headers.set("Referrer-Policy", "no-referrer"); // links de convite não vazam por Referer
+  return res;
 }
 
 export const config = { matcher: ["/admin/:path*"] };

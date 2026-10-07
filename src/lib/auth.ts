@@ -3,46 +3,45 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "./db";
+import { can, type Module } from "./permissions";
 
 export const SESSION_COOKIE = "as_session";
-const MAX_AGE = 60 * 60 * 24 * 14; // 14 dias
+const MAX_AGE = 60 * 60 * 12; // 12 horas
 
 /**
- * Chave das sessões do painel. Use AUTH_SECRET quando definido; sem ele, deriva da
- * DATABASE_URL (que já é secreta e é criada pela Vercel), para o deploy não depender
- * de configurar mais uma variável.
+ * Chave das sessões. Use AUTH_SECRET quando definido; sem ele, deriva da
+ * DATABASE_URL (secreta, criada pela hospedagem).
  */
 function secret() {
   const s = process.env.AUTH_SECRET;
   if (s && s.length >= 16) return s;
-  const db = process.env.DATABASE_URL;
-  if (!db) throw new Error("Defina AUTH_SECRET ou DATABASE_URL");
-  return createHash("sha256").update(`ao-sindico-session:${db}`).digest("hex");
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("Defina AUTH_SECRET ou DATABASE_URL");
+  return createHash("sha256").update(`ao-sindico-session:${url}`).digest("hex");
 }
 
-function sign(payload: string) {
-  return createHmac("sha256", secret()).update(payload).digest("base64url");
-}
+const sign = (payload: string) => createHmac("sha256", secret()).update(payload).digest("base64url");
 
-export function createSessionToken(userId: string) {
+// token: userId.versão.expiração.assinatura — trocar a senha muda a versão e derruba sessões antigas
+function createSessionToken(userId: string, version: number) {
   const exp = Math.floor(Date.now() / 1000) + MAX_AGE;
-  const payload = `${userId}.${exp}`;
+  const payload = `${userId}.${version}.${exp}`;
   return `${payload}.${sign(payload)}`;
 }
 
-function readToken(token: string | undefined): string | null {
+function readToken(token: string | undefined) {
   if (!token) return null;
-  const [userId, exp, sig] = token.split(".");
-  if (!userId || !exp || !sig) return null;
-  const expected = Buffer.from(sign(`${userId}.${exp}`));
+  const [userId, version, exp, sig] = token.split(".");
+  if (!userId || !version || !exp || !sig) return null;
+  const expected = Buffer.from(sign(`${userId}.${version}.${exp}`));
   const given = Buffer.from(sig);
   if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
   if (Number(exp) < Date.now() / 1000) return null;
-  return userId;
+  return { userId, version: Number(version) };
 }
 
-export async function setSession(userId: string) {
-  (await cookies()).set(SESSION_COOKIE, createSessionToken(userId), {
+export async function setSession(user: { id: string; sessionVersion: number }) {
+  (await cookies()).set(SESSION_COOKIE, createSessionToken(user.id, user.sessionVersion), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -55,18 +54,31 @@ export async function clearSession() {
   (await cookies()).delete(SESSION_COOKIE);
 }
 
-export async function getCurrentUser() {
-  const userId = readToken((await cookies()).get(SESSION_COOKIE)?.value);
-  if (!userId) return null;
-  return db.adminUser.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, email: true },
+export type CurrentUser = { id: string; name: string; email: string; role: string };
+
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  const t = readToken((await cookies()).get(SESSION_COOKIE)?.value);
+  if (!t) return null;
+  const user = await db.adminUser.findUnique({
+    where: { id: t.userId },
+    select: { id: true, name: true, email: true, role: true, active: true, sessionVersion: true },
   });
+  if (!user || !user.active || user.sessionVersion !== t.version) return null;
+  return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
 
-/** Use no início de toda página e ação do painel. */
-export async function requireAdmin() {
+/** Use no início de toda página e ação do painel. Com módulo, confere a permissão. */
+export async function requireAdmin(module?: Module): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
+  if (module && !can(user.role, module)) redirect("/admin?sem-permissao=1");
+  return user;
+}
+
+/** Para ações: devolve erro em vez de redirecionar. */
+export async function checkAdmin(module?: Module): Promise<CurrentUser | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  if (module && !can(user.role, module)) return null;
   return user;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { FormState } from "@/admin/actions";
 import type { FieldDef } from "@/admin/resources";
 import { Icon } from "@/components/Icon";
@@ -13,7 +13,52 @@ type Props = {
   options: Record<string, { id: string; label: string }[]>;
   isNew: boolean;
   singular: string;
+  /** volta para esta página depois de salvar (ex.: perfil da empresa) */
+  back?: string;
 };
+
+function SelectWithHint({ f, value }: { f: FieldDef; value: string }) {
+  const [current, setCurrent] = useState(value || String(f.defaultValue ?? ""));
+  const hint = f.options?.find((o) => o.value === current)?.hint;
+  return (
+    <label className="field">
+      <span>
+        {f.label} {f.required && <span className="req">*</span>}
+      </span>
+      <select name={f.name} className="select" value={current} onChange={(e) => setCurrent(e.target.value)}>
+        {f.options?.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      {hint ? (
+        <span className="hint" style={{ color: "var(--teal-deep)", fontWeight: 600 }}>
+          <Icon name="image" size={13} style={{ display: "inline", verticalAlign: -2 }} /> {hint}
+        </span>
+      ) : (
+        f.hint && <span className="hint">{f.hint}</span>
+      )}
+    </label>
+  );
+}
+
+function Rating({ f, value }: { f: FieldDef; value: string }) {
+  const [v, setV] = useState(Number(value || f.defaultValue || 5));
+  return (
+    <div className="field">
+      <span>{f.label}</span>
+      <div className="stars-input" role="radiogroup" aria-label={f.label}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button type="button" key={n} aria-checked={v === n} role="radio" data-on={n <= v} onClick={() => setV(n)} aria-label={`${n} estrela(s)`}>
+            <Icon name="star" size={24} />
+          </button>
+        ))}
+      </div>
+      <input type="hidden" name={f.name} value={v} />
+    </div>
+  );
+}
 
 function Field({ f, value, options }: { f: FieldDef; value: unknown; options?: { id: string; label: string }[] }) {
   const str = value === null || value === undefined ? "" : String(value);
@@ -33,6 +78,8 @@ function Field({ f, value, options }: { f: FieldDef; value: unknown; options?: {
       return <IconField name={f.name} value={str} label={f.label} />;
     case "bool":
       return <Switch name={f.name} label={f.label} hint={f.hint} defaultChecked={Boolean(value)} />;
+    case "rating":
+      return <Rating f={f} value={str} />;
     case "textarea":
       return (
         <label className="field">
@@ -42,24 +89,12 @@ function Field({ f, value, options }: { f: FieldDef; value: unknown; options?: {
         </label>
       );
     case "select":
-      return (
-        <label className="field">
-          {label}
-          <select name={f.name} className="select" defaultValue={str || String(f.defaultValue ?? "")}>
-            {f.options?.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {hint}
-        </label>
-      );
+      return <SelectWithHint f={f} value={str} />;
     case "relation":
       return (
         <label className="field">
           {label}
-          <select name={f.name} className="select" defaultValue={str}>
+          <select name={f.name} className="select" defaultValue={str} required={f.required}>
             <option value="">— Nenhum —</option>
             {options?.map((o) => (
               <option key={o.id} value={o.id}>
@@ -127,7 +162,7 @@ function Field({ f, value, options }: { f: FieldDef; value: unknown; options?: {
   }
 }
 
-export function ResourceForm({ action, fields, values, options, isNew, singular }: Props) {
+export function ResourceForm({ action, fields, values, options, isNew, singular, back }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const main = fields.filter((f) => !f.side);
   const side = fields.filter((f) => f.side);
@@ -143,6 +178,7 @@ export function ResourceForm({ action, fields, values, options, isNew, singular 
 
   return (
     <form action={formAction}>
+      {back && <input type="hidden" name="__back" value={back} />}
       {state.error && (
         <div className="alert alert--error" role="alert" style={{ marginBottom: 16 }}>
           <Icon name="x" /> {state.error}
@@ -161,7 +197,7 @@ export function ResourceForm({ action, fields, values, options, isNew, singular 
       <div className="save-bar">
         <span>{isNew ? `Novo ${singular}` : "Alterações aparecem no site assim que você salvar."}</span>
         <div className="save-bar__actions">
-          {isNew && (
+          {isNew && !back && (
             <button className="btn btn--glass" name="__next" value="novo" disabled={pending}>
               Salvar e criar outro
             </button>

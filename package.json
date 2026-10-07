@@ -5,13 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel-build": "prisma generate && prisma db push --skip-generate && tsx prisma/seed.ts && next build",
+    "vercel-build": "prisma generate && prisma db push --skip-generate && tsx prisma/data-steps.ts && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "lint": "next lint",
     "db:push": "prisma db push",
-    "db:seed": "tsx --env-file=.env prisma/seed.ts",
-    "setup": "prisma db push && tsx --env-file=.env prisma/seed.ts",
+    "db:steps": "tsx --env-file=.env prisma/data-steps.ts",
+    "db:local": "node scripts/postgres-local.mjs",
+    "acervo": "node scripts/importar-acervo.mjs",
+    "admin:convite": "tsx --env-file=.env scripts/convite.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -28,6 +29,8 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cheerio": "^1.2.0",
+    "embedded-postgres": "^18.4.0-beta.17",
     "prisma": "6.19.3",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
