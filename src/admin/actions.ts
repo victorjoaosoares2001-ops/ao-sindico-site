@@ -1,6 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -12,6 +13,12 @@ import { delegate, fromInputDate } from "./data";
 import { getResource, type ResourceDef } from "./resources";
 
 export type FormState = { error?: string; ok?: string };
+
+function safeEqual(a: string, b: string) {
+  const x = Buffer.from(a);
+  const y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual(x, y);
+}
 
 function refreshSite() {
   revalidatePath("/", "layout");
@@ -30,8 +37,14 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
   redirect("/admin");
 }
 
-/** Só funciona enquanto não existe nenhum acesso: cria o primeiro e já entra. */
+/**
+ * Primeiro acesso SÓ com o token de provisionamento definido na hospedagem
+ * (OWNER_SETUP_TOKEN). Sem ele, a criação pública fica desligada.
+ */
 export async function createFirstAdmin(_: FormState, form: FormData): Promise<FormState> {
+  const expected = process.env.OWNER_SETUP_TOKEN;
+  const given = String(form.get("token") ?? "");
+  if (!expected || expected.length < 24 || !safeEqual(given, expected)) return { error: "Acesso por convite. Fale com a administração." };
   if ((await db.adminUser.count()) > 0) return { error: "O primeiro acesso já foi criado. Faça login." };
   const name = String(form.get("name") ?? "").trim();
   const email = String(form.get("email") ?? "").trim().toLowerCase();

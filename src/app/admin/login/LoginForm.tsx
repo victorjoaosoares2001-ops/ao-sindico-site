@@ -38,10 +38,11 @@ export function LoginForm() {
 }
 
 /** Mostrada só enquanto não existe nenhum acesso ao painel. */
-export function SetupForm() {
+export function SetupForm({ token }: { token: string }) {
   const [state, action, pending] = useActionState(createFirstAdmin, {});
   return (
     <form action={action} className="login__card">
+      <input type="hidden" name="token" value={token} />
       <Logo tone="light" />
       <h1>Criar primeiro acesso</h1>
       <p>Defina o e-mail e a senha de quem vai administrar o painel. Depois, em “Equipe e senha”, você adiciona as funcionárias.</p>
