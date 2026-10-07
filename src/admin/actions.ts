@@ -30,6 +30,19 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
   redirect("/admin");
 }
 
+/** Só funciona enquanto não existe nenhum acesso: cria o primeiro e já entra. */
+export async function createFirstAdmin(_: FormState, form: FormData): Promise<FormState> {
+  if ((await db.adminUser.count()) > 0) return { error: "O primeiro acesso já foi criado. Faça login." };
+  const name = String(form.get("name") ?? "").trim();
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const password = String(form.get("password") ?? "");
+  if (!name || !email.includes("@")) return { error: "Informe nome e e-mail válidos." };
+  if (password.length < 8) return { error: "A senha precisa ter pelo menos 8 caracteres." };
+  const user = await db.adminUser.create({ data: { name, email, passwordHash: await bcrypt.hash(password, 10) } });
+  await setSession(user.id);
+  redirect("/admin");
+}
+
 export async function logout() {
   await clearSession();
   redirect("/admin/login");

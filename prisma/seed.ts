@@ -19,10 +19,10 @@ const slugify = (t: string) =>
     .slice(0, 80);
 
 async function main() {
+  // Primeiro acesso: pelo .env (ADMIN_PASSWORD) ou, sem ele, pela tela "Criar primeiro acesso" em /admin.
   const email = (process.env.ADMIN_EMAIL || "admin@aosindico.com").toLowerCase();
   const password = process.env.ADMIN_PASSWORD;
-  if (!password) throw new Error("Defina ADMIN_PASSWORD no .env antes de rodar o seed.");
-  if (!(await db.adminUser.findUnique({ where: { email } }))) {
+  if (password && !(await db.adminUser.findUnique({ where: { email } }))) {
     await db.adminUser.create({ data: { name: "Equipe Ao Síndico", email, passwordHash: await bcrypt.hash(password, 10) } });
     console.log(`✔ acesso ao painel criado: ${email}`);
   }

@@ -1,5 +1,5 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "./db";
@@ -7,10 +7,17 @@ import { db } from "./db";
 export const SESSION_COOKIE = "as_session";
 const MAX_AGE = 60 * 60 * 24 * 14; // 14 dias
 
+/**
+ * Chave das sessões do painel. Use AUTH_SECRET quando definido; sem ele, deriva da
+ * DATABASE_URL (que já é secreta e é criada pela Vercel), para o deploy não depender
+ * de configurar mais uma variável.
+ */
 function secret() {
   const s = process.env.AUTH_SECRET;
-  if (!s || s.length < 16) throw new Error("AUTH_SECRET não configurado (.env)");
-  return s;
+  if (s && s.length >= 16) return s;
+  const db = process.env.DATABASE_URL;
+  if (!db) throw new Error("Defina AUTH_SECRET ou DATABASE_URL");
+  return createHash("sha256").update(`ao-sindico-session:${db}`).digest("hex");
 }
 
 function sign(payload: string) {
