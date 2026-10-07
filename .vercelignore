@@ -1,0 +1,9 @@
+.env
+.env*.local
+.pgdata
+uploads/*
+CONVITE-*.txt
+deploy-*.log
+.claude
+.next
+node_modules
