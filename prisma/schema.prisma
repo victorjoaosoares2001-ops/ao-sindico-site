@@ -1,0 +1,204 @@
+// Banco do site Ao Síndico (Postgres — Neon criado pela Vercel).
+// DATABASE_URL: conexão com pool · DATABASE_URL_UNPOOLED: conexão direta (usada no db push).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// ---------- Fornecedores ----------
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  icon        String? // nome do ícone (ver src/components/Icon.tsx)
+  order       Int        @default(0)
+  published   Boolean    @default(true)
+  suppliers   Supplier[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Supplier {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  tagline     String?
+  description String?
+  services    String? // separados por vírgula
+  logo        String?
+  cover       String?
+  city        String?
+  state       String?
+  phone       String?
+  whatsapp    String?
+  email       String?
+  website     String?
+  instagram   String?
+  plan        String       @default("basico") // basico | verificado | premium
+  featured    Boolean      @default(false)
+  published   Boolean      @default(true)
+  order       Int          @default(0)
+  categories  Category[]
+  campaigns   Campaign[]
+  quoteLinks  QuoteSupplier[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// ---------- Anúncios / campanhas ----------
+
+model Campaign {
+  id         String    @id @default(cuid())
+  title      String
+  image      String?
+  link       String?
+  placement  String    @default("home") // home | faixa | materia | fornecedores
+  startsAt   DateTime?
+  endsAt     DateTime?
+  published  Boolean   @default(true)
+  order      Int       @default(0)
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+// ---------- Conteúdo ----------
+
+model ArticleSection {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  order     Int       @default(0)
+  articles  Article[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Article {
+  id          String          @id @default(cuid())
+  title       String
+  slug        String          @unique
+  excerpt     String?
+  content     String?
+  cover       String?
+  author      String?
+  authorBio   String?
+  sectionId   String?
+  section     ArticleSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  featured    Boolean         @default(false)
+  published   Boolean         @default(true)
+  publishedAt DateTime        @default(now())
+  views       Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Course {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  description String?
+  cover       String?
+  mode        String    @default("online") // online | presencial | hibrido
+  startsAt    DateTime?
+  workload    String?
+  price       String?
+  instructor  String?
+  link        String?
+  published   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  description String?
+  cover       String?
+  startsAt    DateTime?
+  venue       String?
+  city        String?
+  link        String?
+  published   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Partner {
+  id          String   @id @default(cuid())
+  name        String
+  logo        String?
+  url         String?
+  description String?
+  kind        String   @default("parceiro") // parceiro | patrocinador | apoio
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteSetting {
+  key   String @id
+  value String
+}
+
+// ---------- Mensagens (orçamentos, anunciantes, contato) ----------
+
+model Message {
+  id         String          @id @default(cuid())
+  type       String          @default("orcamento") // orcamento | anunciar | contato
+  status     String          @default("novo") // novo | andamento | respondido | arquivado
+  name       String
+  email      String?
+  phone      String?
+  company    String? // condomínio ou empresa
+  city       String?
+  category   String?
+  subject    String?
+  body       String?
+  urgency    String?
+  units      String?
+  notes      String? // observações internas
+  source     String? // página de origem
+  suppliers  QuoteSupplier[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
+
+model QuoteSupplier {
+  messageId  String
+  supplierId String
+  requested  Boolean   @default(false) // escolhido pelo próprio síndico no site
+  sentAt     DateTime?
+  message    Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  supplier   Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, supplierId])
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
