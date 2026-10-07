@@ -37,6 +37,4 @@ export async function findValidToken(token: string) {
   return row;
 }
 
-export function siteUrl() {
-  return (process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")).replace(/\/$/, "");
-}
+export { siteUrl } from "./site-url";

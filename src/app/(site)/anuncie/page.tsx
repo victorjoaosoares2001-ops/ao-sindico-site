@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function AdvertisePage({ searchParams }: { searchParams: Promise<{ contato?: string; perfil?: string }> }) {
   const sp = await searchParams;
+  if (sp.contato === "1") redirect("/contato"); // endereço antigo do Fale conosco
   const [s, numbers] = await Promise.all([getSettings(), portalNumbers()]);
   const isContact = sp.contato === "1";
   const isPro = sp.perfil === "sindico";

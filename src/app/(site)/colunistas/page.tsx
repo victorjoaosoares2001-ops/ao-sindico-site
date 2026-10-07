@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { initials } from "@/components/site/Cards";
@@ -12,6 +13,7 @@ export default async function AuthorsPage() {
     orderBy: [{ order: "asc" }, { name: "asc" }],
   });
   const visible = authors.filter((a) => a._count.articles + a._count.answers > 0 || a.bio);
+  if (visible.length === 0) notFound();
   return (
     <>
       <section className="page-hero page-hero--slim">

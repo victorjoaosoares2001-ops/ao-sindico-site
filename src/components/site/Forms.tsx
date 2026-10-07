@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { Icon } from "@/components/Icon";
 import {
   findCertificate,
@@ -14,12 +14,9 @@ import {
 
 /** Campos anti-robô comuns a todos os formulários públicos. */
 function Guard() {
-  const [t0, setT0] = useState(0);
-  useEffect(() => setT0(Date.now()), []);
   return (
     <>
-      <input type="text" name="empresa_site" className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" />
-      <input type="hidden" name="t0" value={t0 || ""} />
+      <input type="text" name="hp_7f3" className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" />
     </>
   );
 }

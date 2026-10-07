@@ -13,7 +13,8 @@
     "db:local": "node scripts/postgres-local.mjs",
     "acervo": "node scripts/importar-acervo.mjs",
     "admin:convite": "tsx --env-file=.env scripts/convite.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "acervo:avaliacoes": "node scripts/importar-avaliacoes.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",

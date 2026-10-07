@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { submitQuote, type PublicFormState } from "@/lib/public-actions";
 
@@ -53,8 +53,6 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
   const [snapshot, setSnapshot] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLFormElement>(null);
   const refs = useRef<(HTMLFieldSetElement | null)[]>([]);
-  const [t0, setT0] = useState(0); // horário em que o formulário apareceu (barra robôs)
-  useEffect(() => setT0(Date.now()), []);
 
   const collect = () => {
     const fd = new FormData(formRef.current!);
@@ -134,8 +132,7 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
         ))}
       </ol>
 
-      <input type="text" name="empresa_site" className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" />
-      <input type="hidden" name="t0" value={t0 || ""} />
+      <input type="text" name="hp_7f3" className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" />
       <input type="hidden" name="source" value={source ?? ""} />
 
       {/* 1. Necessidade */}
@@ -303,7 +300,7 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
             )}
           </dl>
           <p style={{ fontSize: 12.5, opacity: 0.7 }}>
-            Ao enviar, você autoriza a Ao Síndico a compartilhar este pedido com as empresas selecionadas para que elas façam contato.
+            Ao enviar, você autoriza a Ao Síndico a compartilhar este pedido com as empresas selecionadas para que elas façam contato (veja a <Link href="/privacidade" style={{ textDecoration: "underline" }}>Política de Privacidade</Link>).
           </p>
         </div>
       </fieldset>

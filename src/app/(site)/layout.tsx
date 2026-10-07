@@ -6,6 +6,7 @@ import { NewsletterForm } from "@/components/site/Forms";
 import { Nav } from "@/components/site/Nav";
 import { whatsappLink } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
+import { isAvailable, sectionAvailability } from "@/lib/sections";
 import "./site.css";
 
 // Renderiza a cada visita: o que a equipe salva no painel aparece no próximo carregamento,
@@ -13,7 +14,25 @@ import "./site.css";
 export const dynamic = "force-dynamic";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const s = await getSettings();
+  const [s, open] = await Promise.all([getSettings(), sectionAvailability()]);
+  const hidden = Object.keys(open).filter((k) => !open[k]);
+  const portal = [
+    ["/fornecedores", "Fornecedores"],
+    ["/sindicos-profissionais", "Síndicos profissionais"],
+    ["/informe-se", "Informe-se"],
+    ["/tira-duvidas", "Tira-Dúvidas"],
+    ["/colunistas", "Colunistas"],
+    ["/videos", "Vídeos"],
+    ["/eventos", "Eventos"],
+    ["/cursos", "Cursos"],
+  ].filter(([href]) => isAvailable(open, href));
+  const company = [
+    ["/orcamento", "Solicitar orçamento"],
+    ["/anuncie", "Anuncie"],
+    ["/parceiros", "Parceiros"],
+    ["/contato", "Contato"],
+    ["/busca", "Buscar no portal"],
+  ].filter(([href]) => isAvailable(open, href));
   const wa = whatsappLink(s.whatsapp, "Olá! Vim pelo site Ao Síndico e gostaria de mais informações.");
   const socials = (
     [
@@ -26,7 +45,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   return (
     <>
-      <Nav whatsappHref={wa} />
+      <Nav whatsappHref={wa} hidden={hidden} />
       <main>{children}</main>
 
       <footer className="footer">
@@ -43,23 +62,15 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
             <div>
               <h4>Portal</h4>
               <ul>
-                <li><Link href="/fornecedores">Fornecedores</Link></li>
-                <li><Link href="/sindicos-profissionais">Síndicos profissionais</Link></li>
-                <li><Link href="/informe-se">Informe-se</Link></li>
-                <li><Link href="/tira-duvidas">Tira-Dúvidas</Link></li>
-                <li><Link href="/colunistas">Colunistas</Link></li>
-                <li><Link href="/videos">Vídeos</Link></li>
-                <li><Link href="/eventos">Eventos e cursos</Link></li>
+                {portal.map(([href, label]) => (<li key={href}><Link href={href}>{label}</Link></li>))}
+
               </ul>
             </div>
             <div>
               <h4>Ao Síndico</h4>
               <ul>
-                <li><Link href="/orcamento">Solicitar orçamento</Link></li>
-                <li><Link href="/anuncie">Anuncie</Link></li>
-                <li><Link href="/parceiros">Parceiros</Link></li>
-                <li><Link href="/anuncie?contato=1">Fale conosco</Link></li>
-                <li><Link href="/busca">Buscar no portal</Link></li>
+                {company.map(([href, label]) => (<li key={href}><Link href={href}>{label}</Link></li>))}
+
               </ul>
             </div>
             <div>
@@ -87,7 +98,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           </div>
           <div className="footer__bottom">
             <span>© {new Date().getFullYear()} Ao Síndico. Todos os direitos reservados.</span>
-            <Link href="/admin">Entrar · área da equipe</Link>
+            <span style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <Link href="/privacidade">Privacidade</Link>
+              <Link href="/termos">Termos de uso</Link>
+              <Link href="/admin">Entrar · área da equipe</Link>
+            </span>
           </div>
           <div className="footer__giant" aria-hidden="true">
             AoSindico.com

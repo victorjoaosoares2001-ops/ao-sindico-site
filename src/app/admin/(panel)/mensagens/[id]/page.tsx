@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addContact, deleteMessage, markSupplierSent, setMessageStatus, updateMessage } from "@/admin/actions";
+import { addContact, deleteMessage, emailQuoteToSupplier, markSupplierSent, setMessageStatus, updateMessage } from "@/admin/actions";
+import { EmailSupplierButton } from "@/components/admin/EmailSupplierButton";
 import { ConfirmButton, CopyButton, SubmitButton } from "@/components/admin/Buttons";
 import { ContactLogForm } from "@/components/admin/ContactLog";
 import { History } from "@/components/admin/History";
@@ -10,6 +11,8 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDateTime, whatsappLink } from "@/lib/format";
 import { STATUS_LABEL, TYPE_LABEL } from "../../../messages";
+import { buildQuoteText } from "@/admin/quote-text";
+import { emailConfigured } from "@/lib/email";
 
 export const metadata = { title: "Pedido" };
 
@@ -56,25 +59,8 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
     ["Protocolo", m.id.slice(-6).toUpperCase()],
   ];
 
-  const quoteText = (supplierName: string) =>
-    [
-      `Olá, ${supplierName}! Aqui é da equipe Ao Síndico.`,
-      `Recebemos um pedido de orçamento que combina com a sua empresa:`,
-      ``,
-      m.category && `*Serviço:* ${m.category}`,
-      m.body && `*Descrição:* ${m.body}`,
-      m.company && `*Condomínio:* ${m.company}${m.units ? ` (${m.units} unidades)` : ""}${m.condoType ? ` · ${m.condoType}` : ""}`,
-      where && `*Local:* ${where}`,
-      m.urgency && `*Prazo:* ${m.urgency}`,
-      m.budget && `*Orçamento previsto:* ${m.budget}`,
-      ``,
-      `*Contato:* ${m.name}${m.contactRole ? ` (${m.contactRole})` : ""}${m.phone ? ` · ${m.phone}` : ""}${m.email ? ` · ${m.email}` : ""}`,
-      m.preferredTime && `*Melhor horário:* ${m.preferredTime}`,
-      ``,
-      `Por favor, entre em contato diretamente. Obrigado!`,
-    ]
-      .filter((l): l is string => typeof l === "string")
-      .join("\n");
+  const quoteText = (supplierName: string) => buildQuoteText(m, supplierName);
+  const canEmail = emailConfigured();
 
   const replyText = `Olá, ${m.name.split(" ")[0]}! Aqui é da equipe Ao Síndico. Recebemos sua mensagem pelo site${isQuote ? " e já estamos encaminhando seu pedido de orçamento às empresas" : ""}.`;
   const replyWa = whatsappLink(m.phone, replyText);
@@ -212,6 +198,7 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
                               <Icon name="mail" size={15} /> E-mail
                             </a>
                           )}
+                          {canEmail && s.email && <EmailSupplierButton action={emailQuoteToSupplier.bind(null, m.id, s.id)} />}
                           <CopyButton text={text} label="Copiar texto" />
                           <form action={markSupplierSent.bind(null, m.id, s.id, !sentAt)}>
                             <SubmitButton className="btn btn--ghost btn--sm" pendingText="…">

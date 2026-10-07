@@ -64,5 +64,16 @@ por WhatsApp/e-mail, “marcar como enviado”, registro de cada contato e hist�
 
 `vercel-build` = `prisma generate && prisma db push && tsx prisma/data-steps.ts && next build`.
 Variáveis criadas pela Vercel: `DATABASE_URL`, `DATABASE_URL_UNPOOLED` (Neon) e `BLOB_READ_WRITE_TOKEN` (Blob).
-Opcionais: `SITE_URL` (domínio final), `AUTH_SECRET`, `OWNER_EMAIL`.
+Opcionais: `SITE_URL` (domínio final), `AUTH_SECRET`, `OWNER_EMAIL`, `RESEND_API_KEY` + `EMAIL_FROM` (e-mails).
 Endereços do site antigo (`/informe/…`, `/fornecedor/…`, `/tiraduvidas/…`, `/colunista/…`) redirecionam para os novos.
+Deploy pelo terminal a partir de uma cópia sem histórico git (`git archive HEAD`): no plano Hobby a Vercel
+bloqueia deploys cujo autor do commit não é o dono da conta.
+
+## Etapa final de engenharia (out/2026)
+
+- **Formulários públicos** gravam sempre: anti-robô só pelo campo invisível `hp_7f3` (antes uma checagem de relógio do navegador descartava envios reais em silêncio).
+- **E-mail** (opcional): aviso à equipe (e-mails em *Textos do site → Contato*), confirmação ao síndico e ao inscrito, convite/nova senha por e-mail, “Enviar pelo sistema” para fornecedores. Falha de e-mail nunca interrompe o fluxo.
+- **Páginas** `/contato`, `/privacidade`, `/termos` com textos editáveis em *Textos do site*.
+- **SEO**: domínio de `SITE_URL` (ou do domínio de produção da Vercel); prévias da Vercel com `noindex`; canonical por página.
+- **Seções vazias** (vídeos, cursos, parceiros, eventos, colunistas) somem do menu, rodapé e sitemap e dão 404 até haver conteúdo publicado.
+- **Acervo**: imagens copiadas do servidor antigo (`prisma/legacy-images.ts`, repete a cada deploy até zerar), textos limpos (`prisma/text-fix.ts`), avaliações antigas (`npm run acervo:avaliacoes`).

@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
@@ -13,6 +14,7 @@ const GROUPS = [
 
 export default async function PartnersPage() {
   const partners = await db.partner.findMany({ where: { published: true }, orderBy: [{ order: "asc" }, { name: "asc" }] });
+  if (partners.length === 0) notFound(); // sem parceiros publicados: seção oculta
   return (
     <>
       <section className="page-hero">

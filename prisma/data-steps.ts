@@ -8,6 +8,9 @@ import { PrismaClient } from "@prisma/client";
 import { createHash, randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { ARTICLES, CAMPAIGNS, CATEGORIES, EVENTS, SECTIONS, SUPPLIERS } from "./seed-content";
+import { cleanMigratedText, excerptFrom } from "./text-fix";
+import { migrateLegacyImages as migrateImagesWith } from "./legacy-images";
+import { siteUrl } from "../src/lib/site-url";
 
 const db = new PrismaClient();
 
@@ -51,6 +54,8 @@ const excerptOf = (md: string) => {
   const text = md.replace(/[#*>\[\]_`-]/g, "").replace(/\(https?:[^)]+\)/g, "").replace(/\s+/g, " ").trim();
   return text.length > 190 ? `${text.slice(0, 187).replace(/\s+\S*$/, "")}…` : text;
 };
+
+const migrateLegacyImages = () => migrateImagesWith(db);
 
 async function main() {
   // 1) Segurança: a tela pública de "primeiro acesso" ficou exposta antes do provisionamento.
@@ -209,7 +214,62 @@ async function main() {
     for (const c of list) await db.campaign.update({ where: { id: c.id }, data: { order: Math.max(0, 10 - c.order) } });
   });
 
-  // 6) Acesso da dona: enquanto não houver dono ativo, gera um convite de uso único.
+  // 6) Textos migrados: espaços/parágrafos perdidos e título repetido no início.
+  //    Só altera matérias que continuam idênticas ao que foi importado (não toca no que a equipe editou).
+  await step("acervo-texto-v2", async () => {
+    const items = await json<{ slug: string; title: string; content: string }>("artigos");
+    let fixed = 0;
+    for (const a of items) {
+      const row = await db.article.findUnique({ where: { slug: slugify(a.slug || a.title) }, select: { id: true, title: true, content: true } });
+      if (!row || row.content !== a.content) continue;
+      const content = cleanMigratedText(row.title, a.content);
+      await db.article.update({ where: { id: row.id }, data: { content, excerpt: excerptFrom(content) } });
+      fixed++;
+    }
+    // resumos gerados que começam repetindo o título
+    const all = await db.article.findMany({ select: { id: true, title: true, excerpt: true, content: true } });
+    let excerpts = 0;
+    for (const a of all) {
+      const t = a.title.toLowerCase().replace(/[^a-zà-ÿ0-9]+/g, " ").trim();
+      const e = (a.excerpt ?? "").toLowerCase().replace(/[^a-zà-ÿ0-9]+/g, " ").trim();
+      if (a.content && t && e.startsWith(t)) {
+        await db.article.update({ where: { id: a.id }, data: { excerpt: excerptFrom(cleanMigratedText(a.title, a.content)) } });
+        excerpts++;
+      }
+    }
+    return `${fixed} textos limpos, ${excerpts} resumos refeitos`;
+  });
+
+  // 7) Avaliações públicas do portal antigo
+  await step("acervo-avaliacoes-v1", async () => {
+    const items = await json<{ profileSlug: string; profileName: string; author: string | null; rating: number; comment: string | null; date: string | null }>("avaliacoes");
+    let n = 0;
+    for (const r of items) {
+      const supplier = await db.supplier.findFirst({
+        where: { OR: [{ slug: slugify(r.profileSlug) }, { name: { equals: r.profileName, mode: "insensitive" } }] },
+        select: { id: true },
+      });
+      if (!supplier) continue;
+      await db.review.create({
+        data: {
+          supplierId: supplier.id,
+          name: r.author || "Avaliação do portal anterior",
+          rating: r.rating,
+          comment: r.comment,
+          status: "aprovada",
+          createdAt: r.date ? new Date(r.date) : undefined,
+        },
+      });
+      n++;
+    }
+    return `${n} de ${items.length}`;
+  });
+
+  // 8) Imagens hospedadas no site antigo → armazenamento do projeto (Vercel Blob em produção).
+  //    Repete a cada deploy até não sobrar nenhuma referência ao servidor antigo.
+  await migrateLegacyImages();
+
+  // 9) Acesso da dona: enquanto não houver dono ativo, gera um convite de uso único.
   //    O link sai SOMENTE no log deste build (visível apenas para quem administra a hospedagem).
   const owners = await db.adminUser.count({ where: { role: "dono", active: true } });
   if (owners === 0) {
@@ -225,7 +285,7 @@ async function main() {
         expiresAt: new Date(Date.now() + 72 * 3600_000),
       },
     });
-    const base = (process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")).replace(/\/$/, "");
+    const base = siteUrl();
     console.log(`[CONVITE-DONA] ${base}/admin/convite/${token}`);
     console.log("  (uso único, válido por 72 horas; gerado porque ainda não existe dona/dono ativo)");
   }

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Plus_Jakarta_Sans } from "next/font/google";
+import { headers } from "next/headers";
 import { getSettings } from "@/lib/settings";
+import { isIndexable, siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -8,8 +10,13 @@ const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["ita
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
+  const base = siteUrl();
+  // caminho vem do middleware; canonical sempre no domínio oficial e sem parâmetros de filtro
+  const path = (await headers()).get("x-pathname") ?? "/";
   return {
-    metadataBase: new URL(process.env.SITE_URL || "http://localhost:3000"),
+    metadataBase: new URL(base),
+    alternates: { canonical: `${base}${path === "/" ? "" : path}` || base },
+    robots: isIndexable() ? undefined : { index: false, follow: false },
     title: { default: "Ao Síndico — orçamentos, fornecedores e conteúdo para condomínios", template: "%s | Ao Síndico" },
     description: s.seo_description,
     openGraph: { type: "website", locale: "pt_BR", siteName: "Ao Síndico" },

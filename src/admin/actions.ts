@@ -9,8 +9,11 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/format";
 import { isRole, ROLES } from "@/lib/permissions";
 import { SETTING_GROUPS } from "@/lib/settings";
-import { createAdminToken, findValidToken, siteUrl } from "@/lib/tokens";
+import { createAdminToken, findValidToken } from "@/lib/tokens";
+import { siteUrl } from "@/lib/site-url";
 import { saveUpload } from "@/lib/upload";
+import { emailConfigured, sendEmail, sendQuietly } from "@/lib/email";
+import { buildQuoteText } from "./quote-text";
 import { delegate, fromInputDate } from "./data";
 import { getResource, type ResourceDef } from "./resources";
 
@@ -319,6 +322,24 @@ export async function markSupplierSent(messageId: string, supplierId: string, se
   revalidatePath("/admin", "layout");
 }
 
+/** Envia o pedido à empresa pelo e-mail do sistema, marca como enviado e registra o contato. */
+export async function emailQuoteToSupplier(messageId: string, supplierId: string, _: FormState): Promise<FormState> {
+  const user = await checkAdmin("mensagens");
+  if (!user) return NO_PERMISSION;
+  if (!emailConfigured()) return { error: "Envio de e-mail não configurado na hospedagem. Use os botões de WhatsApp ou E-mail." };
+  const [m, s] = await Promise.all([db.message.findUnique({ where: { id: messageId } }), db.supplier.findUnique({ where: { id: supplierId } })]);
+  if (!m || !s) return { error: "Pedido ou empresa não encontrados." };
+  if (!s.email) return { error: "Esta empresa não tem e-mail cadastrado." };
+  const r = await sendEmail({ to: s.email, subject: `Pedido de orçamento — ${m.category ?? "Ao Síndico"}`, text: buildQuoteText(m, s.name), replyTo: m.email });
+  if (!r.sent) return { error: `Não foi possível enviar: ${r.error}` };
+  await db.quoteSupplier.update({ where: { messageId_supplierId: { messageId, supplierId } }, data: { sentAt: new Date() } });
+  await db.quoteContact.create({ data: { messageId, supplierId, channel: "email", note: `Pedido enviado por e-mail para ${s.email}`, userName: user.name } });
+  if (m.status === "novo") await db.message.update({ where: { id: messageId }, data: { status: "andamento" } });
+  await logAction(user, "encaminhou", "mensagens", messageId, `${s.name} (e-mail)`);
+  revalidatePath(`/admin/mensagens/${messageId}`);
+  return { ok: `Enviado para ${s.email}.` };
+}
+
 /** Registra um contato feito (com o síndico ou com uma empresa). */
 export async function addContact(messageId: string, _: FormState, form: FormData): Promise<FormState> {
   const user = await checkAdmin("mensagens");
@@ -358,7 +379,16 @@ export async function inviteMember(_: FormState, form: FormData): Promise<FormSt
   const token = await createAdminToken({ kind: "convite", email, name, role, createdBy: user.name, hours: 72 });
   await logAction(user, "convidou", "equipe", null, `${name} (${ROLES[role]})`);
   revalidatePath("/admin/equipe");
-  return { ok: `Convite criado para ${name}. Envie o link abaixo (vale 72 horas, uso único).`, link: `${siteUrl()}/admin/convite/${token}` };
+  const link = `${siteUrl()}/admin/convite/${token}`;
+  const mail = await sendQuietly({
+    to: email,
+    subject: "Seu acesso ao painel Ao Síndico",
+    text: `Olá, ${name.split(" ")[0]}!\n\n${user.name} convidou você para o painel do portal Ao Síndico (perfil ${ROLES[role]}).\n\nCrie sua senha por este link (vale 72 horas e só pode ser usado uma vez):\n${link}`,
+  });
+  return {
+    ok: mail.sent ? `Convite enviado por e-mail para ${email}. Se preferir, envie também o link abaixo (vale 72 horas, uso único).` : `Convite criado para ${name}. Envie o link abaixo (vale 72 horas, uso único).`,
+    link,
+  };
 }
 
 export async function createResetLink(userId: string, _: FormState): Promise<FormState> {
@@ -369,7 +399,13 @@ export async function createResetLink(userId: string, _: FormState): Promise<For
   if (target.role === "dono" && user.role !== "dono") return { error: "Só a dona/o dono pode gerar link para outro dono." };
   const token = await createAdminToken({ kind: "senha", email: target.email, userId: target.id, createdBy: user.name, hours: 24 });
   await logAction(user, "senha", "equipe", target.id, target.name);
-  return { ok: `Link de nova senha para ${target.name} (vale 24 horas, uso único):`, link: `${siteUrl()}/admin/convite/${token}` };
+  const link = `${siteUrl()}/admin/convite/${token}`;
+  const mail = await sendQuietly({
+    to: target.email,
+    subject: "Nova senha do painel Ao Síndico",
+    text: `Olá, ${target.name.split(" ")[0]}!\n\nUse este link para criar uma nova senha no painel do Ao Síndico (vale 24 horas e só pode ser usado uma vez):\n${link}\n\nSe você não pediu, ignore este e-mail.`,
+  });
+  return { ok: `${mail.sent ? `Link enviado por e-mail para ${target.email}. ` : ""}Link de nova senha para ${target.name} (vale 24 horas, uso único):`, link };
 }
 
 export async function updateMember(userId: string, _: FormState, form: FormData): Promise<FormState> {

@@ -3,16 +3,31 @@
 import { revalidatePath } from "next/cache";
 import { db } from "./db";
 import { slugify } from "./format";
+import { sendQuietly } from "./email";
+import { getSettings } from "./settings";
+import { siteUrl } from "./site-url";
 
 export type PublicFormState = { ok?: boolean; error?: string; message?: string; link?: string; protocol?: string };
 
 const get = (form: FormData, k: string, max = 2000) => String(form.get(k) ?? "").trim().slice(0, max);
 
-/** Campo invisível + tempo mínimo de preenchimento: barra robôs simples. */
+/**
+ * Anti-robô: só o campo invisível "hp_7f3" (nome que o preenchimento automático do
+ * navegador não reconhece). Não usamos tempo de preenchimento: o relógio do navegador
+ * pode estar adiantado e isso descartava envios reais em silêncio.
+ */
+const HONEYPOT = "hp_7f3";
 function isBot(form: FormData) {
-  if (get(form, "empresa_site") !== "") return true;
-  const started = Number(get(form, "t0"));
-  return Number.isFinite(started) && started > 0 && Date.now() - started < 2500;
+  return get(form, HONEYPOT) !== "";
+}
+const BOT: PublicFormState = { error: "Não foi possível enviar. Atualize a página e tente novamente." };
+
+/** Avisa a equipe (e-mails em Textos do site → Contato). Sem e-mail configurado, não faz nada. */
+async function notifyTeam(subject: string, lines: (string | null | undefined | false)[], replyTo?: string) {
+  const s = await getSettings();
+  const to = s.notify_email || s.email;
+  if (!to) return;
+  await sendQuietly({ to, subject, text: lines.filter(Boolean).join("\n\n"), replyTo: replyTo || null });
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -27,7 +42,7 @@ function validContact(name: string, email: string, phone: string) {
 
 /** Pedido de orçamento (5 etapas) → Mensagens no painel. */
 export async function submitQuote(_: PublicFormState, form: FormData): Promise<PublicFormState> {
-  if (isBot(form)) return { ok: true, message: "Pedido recebido." };
+  if (isBot(form)) return BOT;
   const name = get(form, "name", 120);
   const email = get(form, "email", 160).toLowerCase();
   const phone = get(form, "phone", 40);
@@ -68,16 +83,31 @@ export async function submitQuote(_: PublicFormState, form: FormData): Promise<P
     },
   });
   revalidatePath("/admin", "layout");
+  const protocol = msg.id.slice(-6).toUpperCase();
+  await notifyTeam(`Novo pedido de orçamento #${protocol}: ${category}`, [
+    `*${name}*${get(form, "company") ? ` · ${get(form, "company")}` : ""}`,
+    `${category} · ${[get(form, "neighborhood"), get(form, "city")].filter(Boolean).join(", ")}`,
+    body,
+    `Contato: ${[phone, email].filter(Boolean).join(" · ")}`,
+    `Abrir no painel: ${siteUrl()}/admin/mensagens/${msg.id}`,
+  ], email);
+  if (email) {
+    await sendQuietly({
+      to: email,
+      subject: `Recebemos seu pedido de orçamento (#${protocol})`,
+      text: `Olá, ${name.split(" ")[0]}!\n\nRecebemos seu pedido de orçamento para *${category}*. Nossa equipe vai encaminhá-lo às empresas e você será contatado em breve.\n\nProtocolo: #${protocol}\n\nSe precisar complementar alguma informação, é só responder este e-mail.`,
+    });
+  }
   return {
     ok: true,
-    protocol: msg.id.slice(-6).toUpperCase(),
+    protocol,
     message: "Recebemos seu pedido. Nossa equipe vai encaminhar às empresas e você será contatado em breve.",
   };
 }
 
 /** Empresa querendo anunciar ou contato geral. */
 export async function submitContact(_: PublicFormState, form: FormData): Promise<PublicFormState> {
-  if (isBot(form)) return { ok: true, message: "Mensagem recebida." };
+  if (isBot(form)) return BOT;
   const name = get(form, "name", 120);
   const email = get(form, "email", 160).toLowerCase();
   const phone = get(form, "phone", 40);
@@ -99,11 +129,17 @@ export async function submitContact(_: PublicFormState, form: FormData): Promise
     },
   });
   revalidatePath("/admin", "layout");
-  return { ok: true, message: "Mensagem recebida! Nossa equipe comercial retorna em até 1 dia útil." };
+  await notifyTeam(`${type === "anunciar" ? "Quer anunciar" : "Contato pelo site"}: ${name}${get(form, "company") ? ` (${get(form, "company")})` : ""}`, [
+    `*${get(form, "subject") || (type === "anunciar" ? "Quero anunciar" : "Contato pelo site")}*`,
+    get(form, "body"),
+    `Contato: ${[phone, email].filter(Boolean).join(" · ")}`,
+    `Abrir no painel: ${siteUrl()}/admin/mensagens`,
+  ], email);
+  return { ok: true, message: type === "anunciar" ? "Mensagem recebida! Nossa equipe comercial retorna em até 1 dia útil." : "Mensagem recebida! Retornaremos em até 1 dia útil." };
 }
 
 export async function subscribe(_: PublicFormState, form: FormData): Promise<PublicFormState> {
-  if (isBot(form)) return { ok: true, message: "Pronto!" };
+  if (isBot(form)) return BOT;
   const email = get(form, "email", 160).toLowerCase();
   if (!EMAIL.test(email)) return { error: "Digite um e-mail válido." };
   await db.subscriber.upsert({ where: { email }, create: { email, name: get(form, "name", 120) || null }, update: {} });
@@ -112,7 +148,7 @@ export async function subscribe(_: PublicFormState, form: FormData): Promise<Pub
 
 /** Tira-Dúvidas: pergunta vai para moderação no painel. */
 export async function submitQuestion(_: PublicFormState, form: FormData): Promise<PublicFormState> {
-  if (isBot(form)) return { ok: true, message: "Pergunta recebida." };
+  if (isBot(form)) return BOT;
   const title = get(form, "title", 200);
   const askerName = get(form, "name", 120);
   const askerEmail = get(form, "email", 160).toLowerCase();
@@ -138,7 +174,7 @@ export async function submitQuestion(_: PublicFormState, form: FormData): Promis
 
 /** Avaliação de fornecedor: entra como pendente. */
 export async function submitReview(supplierId: string, _: PublicFormState, form: FormData): Promise<PublicFormState> {
-  if (isBot(form)) return { ok: true, message: "Avaliação recebida." };
+  if (isBot(form)) return BOT;
   const name = get(form, "name", 120);
   const rating = Number(get(form, "rating"));
   const email = get(form, "email", 160).toLowerCase();
@@ -156,7 +192,7 @@ export async function submitReview(supplierId: string, _: PublicFormState, form:
 
 /** Inscrição em evento. */
 export async function registerForEvent(eventId: string, _: PublicFormState, form: FormData): Promise<PublicFormState> {
-  if (isBot(form)) return { ok: true, message: "Inscrição recebida." };
+  if (isBot(form)) return BOT;
   const event = await db.event.findFirst({ where: { id: eventId, published: true }, include: { _count: { select: { registrations: true } } } });
   if (!event) return { error: "Evento não encontrado." };
   if (!event.registrationOpen || (event.startsAt && event.startsAt < new Date())) return { error: "As inscrições para este evento estão encerradas." };
@@ -182,6 +218,21 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
     },
   });
   revalidatePath("/admin", "layout");
+  const when = event.startsAt
+    ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "full" }).format(event.startsAt)
+    : null;
+  await sendQuietly({
+    to: email,
+    subject: `Inscrição confirmada: ${event.title}`,
+    text: [
+      `Olá, ${name.split(" ")[0]}! Sua inscrição no *${event.title}* está confirmada.`,
+      [when, event.venue, event.address, event.city].filter(Boolean).join(" · "),
+      `Detalhes: ${siteUrl()}/eventos/${event.slug}`,
+      "Guarde este e-mail: ele dá acesso ao certificado de participação.",
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+  });
   return { ok: true, message: `Inscrição confirmada no ${event.title}. Guarde este e-mail: ele dá acesso ao certificado.` };
 }
 

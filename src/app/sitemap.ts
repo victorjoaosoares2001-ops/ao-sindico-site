@@ -1,10 +1,14 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
+import { isAvailable, sectionAvailability } from "@/lib/sections";
+import { isIndexable, siteUrl } from "@/lib/site-url";
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = (process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")).replace(/\/$/, "");
+  if (!isIndexable()) return [];
+  const base = siteUrl();
+  const open = await sectionAvailability();
   const [suppliers, articles, events, courses, authors, questions] = await Promise.all([
     db.supplier.findMany({ where: { published: true }, select: { slug: true, updatedAt: true } }),
     db.article.findMany({ where: { published: true, publishedAt: { lte: new Date() } }, select: { slug: true, updatedAt: true } }),
@@ -13,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     db.author.findMany({ where: { published: true }, select: { slug: true, updatedAt: true } }),
     db.question.findMany({ where: { published: true }, select: { slug: true, updatedAt: true } }),
   ]);
-  const fixed = ["", "/fornecedores", "/sindicos-profissionais", "/informe-se", "/tira-duvidas", "/colunistas", "/videos", "/eventos", "/cursos", "/parceiros", "/orcamento", "/anuncie"].map((p) => ({
+  const fixed = ["", "/fornecedores", "/sindicos-profissionais", "/informe-se", "/tira-duvidas", "/colunistas", "/videos", "/eventos", "/cursos", "/parceiros", "/orcamento", "/anuncie", "/contato", "/privacidade", "/termos"].filter((p) => isAvailable(open, p)).map((p) => ({
     url: `${base}${p}`,
     changeFrequency: "daily" as const,
     priority: p === "" ? 1 : 0.8,

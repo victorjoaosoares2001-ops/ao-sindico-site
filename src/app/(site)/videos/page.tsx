@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
@@ -14,6 +15,7 @@ export default async function VideosPage() {
     db.video.findMany({ where: { published: true }, include: { author: true }, orderBy: [{ featured: "desc" }, { publishedAt: "desc" }] }),
     getSettings(),
   ]);
+  if (videos.length === 0) notFound(); // sem vídeos publicados: seção fica oculta
   return (
     <>
       <section className="page-hero page-hero--slim">

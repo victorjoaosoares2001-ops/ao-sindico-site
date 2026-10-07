@@ -22,7 +22,8 @@ const UTIL = [
 ];
 
 /** Barra utilitária + barra principal de vidro. Sobre o topo escuro fica transparente; ao rolar, vira vidro claro. */
-export function Nav({ whatsappHref }: { whatsappHref: string | null }) {
+export function Nav({ whatsappHref, hidden = [] }: { whatsappHref: string | null; hidden?: string[] }) {
+  const show = (l: { href: string }) => !hidden.includes(l.href);
   const pathname = usePathname();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
@@ -71,7 +72,7 @@ export function Nav({ whatsappHref }: { whatsappHref: string | null }) {
       <header className={`nav${scrolled ? " nav--scrolled" : " nav--top"}`}>
         <div className="nav__util container" aria-label="Acesso rápido">
           <ul>
-            {UTIL.map((l) => (
+            {UTIL.filter(show).map((l) => (
               <li key={l.href}>
                 <Link href={l.href} aria-current={isActive(l.href) ? "page" : undefined}>
                   {l.label}
@@ -105,7 +106,7 @@ export function Nav({ whatsappHref }: { whatsappHref: string | null }) {
               <Logo />
             </Link>
             <ul className="nav__links">
-              {MAIN.map((l) => (
+              {MAIN.filter(show).map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} aria-current={isActive(l.href) ? "page" : undefined}>
                     {l.label}
@@ -163,7 +164,7 @@ export function Nav({ whatsappHref }: { whatsappHref: string | null }) {
           <input name="q" placeholder="Buscar no portal" aria-label="Buscar no portal" />
         </form>
         <ul className="sheet__links">
-          {[{ href: "/", label: "Início" }, ...MAIN, ...UTIL].map((l) => (
+          {[{ href: "/", label: "Início" }, ...MAIN, ...UTIL, { href: "/contato", label: "Contato" }].filter(show).map((l) => (
             <li key={l.href}>
               <Link href={l.href}>
                 {l.label} <Icon name="arrowRight" />
