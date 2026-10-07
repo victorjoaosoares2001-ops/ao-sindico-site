@@ -22,8 +22,15 @@ Banco local: `npm run db:local` (porta 5433) → `npx prisma db push` → `npm r
 - Regressão: todas as páginas públicas, redirects antigos, painel, imagens migradas respondendo.
 - `tsc` e `next build` OK.
 
-## Falta
-- Commit, deploy (cópia exportada) e verificação em produção.
+## Produção (07/10/2026, commit f848037) — CONCLUÍDO
+- Log do build: 375 textos limpos, 5 resumos refeitos, 4 avaliações, 503/503 imagens no Vercel Blob.
+- Verificado (somente leitura, sem criar dados de teste): /contato /privacidade /termos 200; /videos /cursos /parceiros 404 e fora do menu; robots/sitemap/canonical com o domínio de produção (sem localhost); 0 imagens do servidor antigo; imagem migrada servida pelo Blob.
+- A dona já criou o acesso em produção (nenhum convite novo gerado).
 
-## Próximo passo exato
-`git archive HEAD` → extrair em scratchpad\deploy → copiar `.vercel` → `npx vercel deploy --prod --yes --logs > deploy-prod.log` → conferir log (imagens-legadas, textos, avaliações) → testar produção.
+## Depende de configuração externa
+- E-mail: `RESEND_API_KEY` + `EMAIL_FROM` na Vercel (domínio verificado no Resend) e e-mail da equipe em Textos do site → Contato.
+- Domínio final: apontar aosindico.com e definir `SITE_URL`.
+- Publicação automática pelo GitHub: repositório e Vercel em contas diferentes (Hobby bloqueia).
+
+## Próximo passo
+Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta desta lista.
