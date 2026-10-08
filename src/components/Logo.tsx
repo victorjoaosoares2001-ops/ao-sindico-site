@@ -1,19 +1,15 @@
 /**
- * Marca oficial "Portal AoSindico.com": três quadrados (azul-petróleo,
- * magenta, amarelo) sobre a palavra. Redesenhada em vetor para ficar nítida
- * em fundo claro e escuro.
+ * Marca oficial "Ao Síndico": ícone em chevrons (azul-petróleo, magenta,
+ * amarelo) extraído do logo oficial ao lado da palavra. Funciona em fundo
+ * claro e escuro (o ícone tem fundo transparente).
  */
 export function Logo({ tone = "dark", compact = false }: { tone?: "dark" | "light"; compact?: boolean }) {
   return (
     <span className={`logo logo--${tone}`} aria-label="Portal Ao Síndico">
+      <img className="logo__icon" src="/logo-icon.png" alt="" width={27} height={38} />
       {!compact && <span className="logo__portal">Portal</span>}
       <span className="logo__main">
-        <span className="logo__marks" aria-hidden="true">
-          <i style={{ background: "var(--teal-deep)" }} />
-          <i style={{ background: "var(--magenta)" }} />
-          <i style={{ background: "var(--yellow)" }} />
-        </span>
-        <strong>AoSindico</strong>
+        <strong>AoSíndico</strong>
         <span className="logo__com">.com</span>
       </span>
     </span>
