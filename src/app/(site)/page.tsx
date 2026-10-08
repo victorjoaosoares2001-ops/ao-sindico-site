@@ -202,7 +202,7 @@ export default async function HomePage() {
 
       {/* ---------- Categorias ---------- */}
       {categories.length > 0 && (
-        <section className="section" style={{ paddingTop: 0 }}>
+        <section className="section band band--dark">
           <div className="container">
             <SectionHead
               num="02"
@@ -244,7 +244,7 @@ export default async function HomePage() {
 
       {/* ---------- Fornecedores em destaque ---------- */}
       {featured.length > 0 && (
-        <section className="section" style={{ paddingTop: 0 }}>
+        <section className="section">
           <div className="container">
             <SectionHead num="03" label="Em destaque" title="Empresas" accent="em destaque." link={{ href: "/fornecedores", label: "Ver todas" }} />
             <div className="sup-grid">
@@ -268,7 +268,7 @@ export default async function HomePage() {
 
       {/* ---------- Tira-Dúvidas + vídeos ---------- */}
       {(questions.length > 0 || videos.length > 0) && (
-        <section className="section" style={{ paddingTop: strip[0] ? undefined : 0 }}>
+        <section className="section band band--magenta">
           <div className="container split">
             {questions.length > 0 && (
               <div>
@@ -332,7 +332,7 @@ export default async function HomePage() {
 
       {/* ---------- Agenda ---------- */}
       {(events.length > 0 || courses.length > 0) && (
-        <section className="section" style={{ paddingTop: 0 }}>
+        <section className="section">
           <div className="container">
             <SectionHead
               num="06"
@@ -356,7 +356,7 @@ export default async function HomePage() {
 
       {/* ---------- Colunistas ---------- */}
       {authors.length > 0 && (
-        <section className="section" style={{ paddingTop: 0 }}>
+        <section className="section">
           <div className="container">
             <SectionHead num="07" label="Colunistas" title="Quem escreve" accent="no Ao Síndico." link={{ href: "/colunistas", label: "Todos os colunistas" }} />
             <div className="author-grid">
@@ -379,7 +379,7 @@ export default async function HomePage() {
 
       {/* ---------- Parceiros ---------- */}
       {partners.length > 0 && (
-        <section className="section" style={{ paddingTop: 0 }}>
+        <section className="section">
           <div className="container">
             <SectionHead num="08" label="Parceiros" title="Quem caminha" accent="com a gente." link={{ href: "/parceiros", label: "Conheça os parceiros" }} />
             <div className="partners">
@@ -401,7 +401,7 @@ export default async function HomePage() {
       )}
 
       {/* ---------- Anuncie ---------- */}
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section">
         <div className="container">
           <div className="cta" data-reveal>
             <div>

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/Icon";
-import { Logo } from "@/components/Logo";
 import { MobileBar, RevealObserver } from "@/components/site/Client";
 import { NewsletterForm } from "@/components/site/Forms";
 import { Nav } from "@/components/site/Nav";
@@ -52,7 +51,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <div className="container">
           <div className="footer__top">
             <div className="footer__about">
-              <Logo tone="light" />
+              <div className="footer__brand">
+                <img src="/logo-full-dark.png" alt="Ao Síndico — Atender, Informar, Inovar" />
+              </div>
               <p>{s.about_text}</p>
               <div style={{ maxWidth: 380 }}>
                 <p style={{ margin: "0 0 10px", fontSize: 14, color: "rgba(255,255,255,.55)" }}>Receba novidades no seu e-mail</p>
