@@ -56,6 +56,35 @@ export function MobileBar({ whatsappHref }: { whatsappHref: string | null }) {
 export function Scroller({ children, label }: { children: React.ReactNode; label: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const go = (dir: number) => ref.current?.scrollBy({ left: dir * ref.current.clientWidth * 0.85, behavior: "smooth" });
+
+  // Avança os letreiros/banners para a esquerda logo após o carregamento;
+  // pausa quando o mouse está em cima e volta ao início no final.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || el.childElementCount < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let paused = false;
+    const onEnter = () => { paused = true; };
+    const onLeave = () => { paused = false; };
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("mouseleave", onLeave);
+    el.addEventListener("touchstart", onEnter, { passive: true });
+    el.addEventListener("touchend", onLeave, { passive: true });
+    const t = window.setInterval(() => {
+      if (paused || !ref.current) return;
+      const nearEnd = ref.current.scrollLeft + ref.current.clientWidth >= ref.current.scrollWidth - 8;
+      if (nearEnd) ref.current.scrollTo({ left: 0, behavior: "smooth" });
+      else go(1);
+    }, 4000);
+    return () => {
+      window.clearInterval(t);
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
+      el.removeEventListener("touchstart", onEnter);
+      el.removeEventListener("touchend", onLeave);
+    };
+  }, []);
+
   return (
     <div>
       <div className="ads-head">
