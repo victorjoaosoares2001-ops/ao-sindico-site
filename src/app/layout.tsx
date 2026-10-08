@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: "Ao Síndico — orçamentos, fornecedores e conteúdo para condomínios", template: "%s | Ao Síndico" },
     description: s.seo_description,
     openGraph: { type: "website", locale: "pt_BR", siteName: "Ao Síndico" },
-    icons: { icon: "/icon.svg" },
+    icons: { icon: [{ url: "/logo-icon.png", type: "image/png" }] },
   };
 }
 

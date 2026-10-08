@@ -1,9 +1,3 @@
-/* =========================================================
-   Ao Síndico — tokens e base
-   Paleta oficial: grafite #2E3034 · azul-petróleo #0797A3/#087983
-   magenta #C92D62 · amarelo #F5B51B · papel #F8F7F4 · areia #E5E1D9
-   ========================================================= */
-
 :root {
   --graphite: #2e3034;
   --ink: #1c1d21;
@@ -63,7 +57,13 @@ body {
   font-size: 16px;
   line-height: 1.6;
   color: var(--ink);
-  background: var(--paper);
+  background:
+    radial-gradient(60% 42% at 100% 0%, rgba(7, 151, 163, 0.06), transparent 62%),
+    radial-gradient(52% 38% at 0% 42%, rgba(201, 45, 98, 0.05), transparent 62%),
+    radial-gradient(56% 42% at 100% 82%, rgba(245, 181, 27, 0.07), transparent 66%),
+    radial-gradient(48% 36% at 0% 100%, rgba(7, 151, 163, 0.05), transparent 60%),
+    linear-gradient(180deg, #faf9f5 0%, var(--paper) 34%, #f3f1ea 100%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -140,14 +140,20 @@ p {
 
 .logo {
   display: inline-flex;
-  align-items: baseline;
-  gap: 5px;
-  padding-top: 12px;
+  align-items: center;
+  gap: 9px;
   font-size: 19px;
   line-height: 1;
   letter-spacing: -0.02em;
   white-space: nowrap;
   color: var(--ink);
+}
+
+.logo__icon {
+  width: auto;
+  height: 36px;
+  flex: none;
+  filter: drop-shadow(0 3px 6px rgba(28, 29, 33, 0.2));
 }
 
 .logo__portal {
@@ -156,22 +162,8 @@ p {
 }
 
 .logo__main {
-  position: relative;
-}
-
-.logo__marks {
-  position: absolute;
-  top: -12px;
-  left: 1px;
-  display: flex;
-  gap: 3px;
-}
-
-.logo__marks i {
-  display: block;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
+  display: inline-flex;
+  align-items: baseline;
 }
 
 .logo__main strong {
@@ -205,12 +197,14 @@ p {
   border: 0;
   border-radius: 999px;
   background: var(--bg);
+  background: linear-gradient(140deg, color-mix(in srgb, var(--bg) 80%, #ffffff 20%), var(--bg) 62%);
   color: var(--fg);
   font-weight: 600;
   font-size: 15px;
   letter-spacing: -0.01em;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--bg) 70%, transparent);
   transition:
     transform 0.35s var(--ease),
     box-shadow 0.35s var(--ease),
@@ -220,7 +214,7 @@ p {
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px -10px rgba(28, 29, 33, 0.45);
+  box-shadow: 0 14px 30px -12px color-mix(in srgb, var(--bg) 75%, transparent);
 }
 
 .btn:active {
@@ -270,24 +264,28 @@ p {
 .btn--ghost {
   --bg: transparent;
   --fg: var(--ink);
+  background: transparent;
   box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 .btn--ghost:hover {
-  --bg: rgba(255, 255, 255, 0.7);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    var(--shadow-sm);
 }
 
 .btn--glass {
   --bg: rgba(255, 255, 255, 0.1);
   --fg: #fff;
+  background: rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
 }
 
 .btn--glass:hover {
-  --bg: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .btn--sm {
@@ -304,6 +302,7 @@ p {
 
 .field {
   display: grid;
+  grid-gap: 6px;
   gap: 6px;
 }
 
@@ -328,7 +327,8 @@ p {
     border-color 0.2s,
     box-shadow 0.2s,
     background 0.2s;
-  appearance: none;
+  -moz-appearance: none;
+       appearance: none;
   -webkit-appearance: none;
 }
 
@@ -384,11 +384,13 @@ p {
 .alert--error {
   background: var(--magenta-soft);
   color: #8f1d44;
+  box-shadow: inset 0 0 0 1px rgba(201, 45, 98, 0.2);
 }
 
 .alert--ok {
   background: var(--teal-soft);
   color: #055c64;
+  box-shadow: inset 0 0 0 1px rgba(8, 121, 131, 0.2);
 }
 
 /* ---------- Selos ---------- */
@@ -404,6 +406,7 @@ p {
   font-weight: 600;
   letter-spacing: 0.02em;
   background: rgba(46, 48, 52, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(46, 48, 52, 0.07);
   color: var(--ink-2);
   white-space: nowrap;
 }
@@ -411,16 +414,19 @@ p {
 .chip--teal {
   background: var(--teal-soft);
   color: var(--teal-deep);
+  box-shadow: inset 0 0 0 1px rgba(8, 121, 131, 0.18);
 }
 
 .chip--magenta {
   background: var(--magenta-soft);
   color: var(--magenta);
+  box-shadow: inset 0 0 0 1px rgba(201, 45, 98, 0.18);
 }
 
 .chip--yellow {
   background: var(--yellow-soft);
   color: #8a6100;
+  box-shadow: inset 0 0 0 1px rgba(245, 181, 27, 0.35);
 }
 
 .chip--dark {
