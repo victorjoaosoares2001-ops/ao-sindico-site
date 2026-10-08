@@ -269,7 +269,18 @@ async function main() {
   //    Repete a cada deploy até não sobrar nenhuma referência ao servidor antigo.
   await migrateLegacyImages();
 
-  // 9) Acesso da dona: enquanto não houver dono ativo, gera um convite de uso único.
+  // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
+  await step("acesso-luiza-v1", async () => {
+    const email = "luiza@aosindico.com";
+    if (await db.adminUser.findUnique({ where: { email } })) return "já existia";
+    const user = await db.adminUser.create({
+      data: { name: "Luiza", email, role: "admin", passwordHash: "$2b$12$QzIHMQFMPJ/hjWrWsrLfZ.59sGZb1MMYt1buR.9xfVwI/tDTtkfT2" },
+    });
+    await db.auditLog.create({ data: { userName: "Provisionamento (deploy)", action: "criou", entity: "equipe", entityId: user.id, label: "Luiza (admin)" } });
+    return "criado";
+  });
+
+  // 10) Acesso da dona: enquanto não houver dono ativo, gera um convite de uso único.
   //    O link sai SOMENTE no log deste build (visível apenas para quem administra a hospedagem).
   const owners = await db.adminUser.count({ where: { role: "dono", active: true } });
   if (owners === 0) {
