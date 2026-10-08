@@ -231,7 +231,7 @@ export default async function HomePage() {
                 <span className="cat-card__go">
                   <Icon name="arrowUpRight" size={16} />
                 </span>
-                <span className="cat-card__icon" style={{ background: "var(--magenta-soft)", color: "var(--magenta)" }}>
+                <span className="cat-card__icon">
                   <Icon name="users" size={22} />
                 </span>
                 <h3>Síndicos profissionais</h3>

@@ -3511,17 +3511,92 @@ a:hover .logo__main strong,
   color: #fff;
 }
 
-/* Cards sobre a faixa escura: texto escuro sobre cartão claro (legível e harmônico) */
+/* Cards sobre a faixa escura: vidro com acento tricolor e luz */
 .band--dark .cat-card {
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.97);
+  --acc: var(--teal);
+  --acc-soft: rgba(7, 151, 163, 0.2);
+  color: #fff;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
-    0 24px 48px -20px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.11),
+    0 20px 44px -20px rgba(0, 0, 0, 0.55);
+}
+
+.band--dark .cat-card:nth-child(3n + 2) {
+  --acc: var(--magenta);
+  --acc-soft: rgba(201, 45, 98, 0.2);
+}
+
+.band--dark .cat-card:nth-child(3n) {
+  --acc: var(--yellow);
+  --acc-soft: rgba(245, 181, 27, 0.2);
+}
+
+.band--dark .cat-card::before {
+  background:
+    radial-gradient(90% 70% at 100% 0%, var(--acc-soft), transparent 72%),
+    radial-gradient(70% 60% at 0% 100%, var(--acc-soft), transparent 75%);
+  opacity: 0.55;
+}
+
+.band--dark .cat-card h3 {
+  color: #fff;
+}
+
+.band--dark .cat-card p {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.band--dark .cat-card__num {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.band--dark .cat-card__icon {
+  background: var(--acc-soft);
+  color: var(--acc);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--acc) 45%, transparent),
+    0 0 20px var(--acc-soft);
+}
+
+.band--dark .cat-card__go {
+  color: rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .band--dark .cat-card:hover {
   color: #fff;
+  transform: translateY(-5px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, var(--acc) 55%, transparent),
+    0 26px 54px -20px color-mix(in srgb, var(--acc) 45%, transparent),
+    0 20px 44px -18px rgba(0, 0, 0, 0.55);
+}
+
+.band--dark .cat-card:hover::before {
+  opacity: 1;
+}
+
+.band--dark .cat-card:hover p,
+.band--dark .cat-card:hover .cat-card__num {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.band--dark .cat-card:hover .cat-card__icon {
+  background: var(--acc);
+  color: #17181b;
+  box-shadow: 0 0 26px var(--acc-soft);
+}
+
+.band--dark .cat-card:hover .cat-card__go {
+  background: var(--acc);
+  color: #17181b;
+  box-shadow: 0 0 18px var(--acc-soft);
+  transform: rotate(-45deg);
 }
 
 /* Letreiro SEMPRE animado, mesmo com "reduzir movimento" do sistema ligado */
