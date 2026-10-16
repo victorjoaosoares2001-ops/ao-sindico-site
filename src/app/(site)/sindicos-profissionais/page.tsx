@@ -100,9 +100,9 @@ export default async function ProsPage({ searchParams }: { searchParams: Promise
           {pages > 1 && (
             <nav className="pills" style={{ justifyContent: "center", marginTop: 40 }} aria-label="Páginas">
               {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-                <Link key={n} href={link(n)} prefetch={false} aria-current={n === page}>
+                <a key={n} href={link(n)} aria-current={n === page}>
                   {n}
-                </Link>
+                </a>
               ))}
             </nav>
           )}

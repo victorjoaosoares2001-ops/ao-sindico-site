@@ -95,13 +95,13 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
           </form>
 
           <div className="pills" aria-label="Categorias">
-            <Link href={qs({ categoria: undefined, pagina: undefined })} prefetch={false} aria-current={!current}>
+            <a href={qs({ categoria: undefined, pagina: undefined })} aria-current={!current}>
               Todas
-            </Link>
+            </a>
             {categories.map((c) => (
-              <Link key={c.id} href={qs({ categoria: c.slug, pagina: undefined })} prefetch={false} aria-current={current?.id === c.id}>
+              <a key={c.id} href={qs({ categoria: c.slug, pagina: undefined })} aria-current={current?.id === c.id}>
                 {c.name}
-              </Link>
+              </a>
             ))}
           </div>
 
@@ -111,13 +111,13 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
             </p>
             <p className="result-count">
               Ordenar:{" "}
-              <Link href={qs({ ordem: undefined })} prefetch={false} style={{ fontWeight: sp.ordem === "az" ? 400 : 700 }}>
+              <a href={qs({ ordem: undefined })} style={{ fontWeight: sp.ordem === "az" ? 400 : 700 }}>
                 Destaques
-              </Link>{" "}
+              </a>{" "}
               ·{" "}
-              <Link href={qs({ ordem: "az" })} prefetch={false} style={{ fontWeight: sp.ordem === "az" ? 700 : 400 }}>
+              <a href={qs({ ordem: "az" })} style={{ fontWeight: sp.ordem === "az" ? 700 : 400 }}>
                 A–Z
-              </Link>
+              </a>
             </p>
           </div>
 
@@ -148,9 +148,9 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
           {pages > 1 && (
             <nav className="pills" style={{ justifyContent: "center", marginTop: 40 }} aria-label="Páginas">
               {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-                <Link key={n} href={qs({ pagina: String(n) })} prefetch={false} aria-current={n === page}>
+                <a key={n} href={qs({ pagina: String(n) })} aria-current={n === page}>
                   {n}
-                </Link>
+                </a>
               ))}
             </nav>
           )}
