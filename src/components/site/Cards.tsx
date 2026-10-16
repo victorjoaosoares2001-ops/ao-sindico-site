@@ -1,9 +1,9 @@
 import Link from "next/link";
-import type { Article, ArticleSection, Author, Course, Event, Supplier } from "@prisma/client";
+import Image from "next/image";
+import type { Article, ArticleSection, Author, Course, Event } from "@prisma/client";
 import { Icon } from "@/components/Icon";
 import { dayMonth, formatDate } from "@/lib/format";
-
-type SupplierWithCats = Supplier & { categories: { name: string; slug: string }[] };
+import type { SupplierCardData } from "@/lib/queries";
 
 const PLAN_BADGE: Record<string, { label: string; cls: string; icon: "star" | "check" } | undefined> = {
   premium: { label: "Premium", cls: "chip--yellow", icon: "star" },
@@ -19,15 +19,23 @@ export function initials(name: string) {
     .join("");
 }
 
-export function SupplierCard({ s, delay = 0, rating }: { s: SupplierWithCats; delay?: number; rating?: { avg: number; count: number } }) {
+function cardExcerpt(value: string | null | undefined, limit = 190) {
+  if (!value) return "";
+  const clean = value.replace(/\s+/g, " ").trim();
+  return clean.length > limit ? `${clean.slice(0, limit).trimEnd()}…` : clean;
+}
+
+export function SupplierCard({ s, delay = 0, rating, priority = false }: { s: SupplierCardData; delay?: number; rating?: { avg: number; count: number }; priority?: boolean }) {
   const badge = PLAN_BADGE[s.plan];
   // sem foto de capa: o próprio logo vira a imagem do cartão
   const logoAsCover = !s.cover && !!s.logo;
+  const summary = cardExcerpt(s.tagline || s.description);
+  const mediaClass = ["sup-card__media", logoAsCover ? "sup-card__media--logo" : "", !logoAsCover && s.logo ? "sup-card__media--with-logo" : ""].filter(Boolean).join(" ");
   return (
     <article className="sup-card" data-reveal style={{ ["--d" as string]: `${delay}s` }}>
-      <Link href={`/fornecedores/${s.slug}`} className={`sup-card__media${logoAsCover ? " sup-card__media--logo" : ""}`} aria-label={s.name}>
-        {s.cover && <img className="cover" src={s.cover} alt="" loading="lazy" />}
-        {logoAsCover && <img className="logo-cover" src={s.logo!} alt="" loading="lazy" />}
+      <Link href={`/fornecedores/${s.slug}`} prefetch={false} className={mediaClass} aria-label={s.name}>
+        {s.cover && <Image className="cover" src={s.cover} alt="" fill sizes="(max-width: 680px) 100vw, (max-width: 1100px) 50vw, 390px" quality={68} priority={priority} />}
+        {logoAsCover && <Image className="logo-cover" src={s.logo!} alt="" width={420} height={260} sizes="(max-width: 680px) 78vw, 320px" quality={70} priority={priority} />}
         <div className="sup-card__badges">
           {badge ? (
             <span className={`chip ${badge.cls}`}>
@@ -38,19 +46,19 @@ export function SupplierCard({ s, delay = 0, rating }: { s: SupplierWithCats; de
           )}
           {s.featured && <span className="chip chip--glass">Destaque</span>}
         </div>
-        {!logoAsCover && <span className="sup-card__logo">{s.logo ? <img src={s.logo} alt="" loading="lazy" /> : initials(s.name)}</span>}
+        {!logoAsCover && <span className="sup-card__logo">{s.logo ? <Image src={s.logo} alt="" width={96} height={96} sizes="60px" quality={70} priority={priority} /> : initials(s.name)}</span>}
       </Link>
       <div className="sup-card__body">
         {s.categories.length > 0 && <div className="sup-card__cats">{s.categories.map((c) => c.name).join(" · ")}</div>}
         <h3>
-          <Link href={`/fornecedores/${s.slug}`}>{s.name}</Link>
+          <Link href={`/fornecedores/${s.slug}`} prefetch={false}>{s.name}</Link>
         </h3>
         {rating && rating.count > 0 && (
           <span className="sup-card__rating">
             <b>★ {rating.avg.toFixed(1)}</b> · {rating.count} {rating.count === 1 ? "avaliação" : "avaliações"}
           </span>
         )}
-        {(s.tagline || s.description) && <p className="sup-card__text">{s.tagline || s.description}</p>}
+        {summary && <p className="sup-card__text">{summary}</p>}
         <div className="sup-card__foot">
           <span className="sup-card__loc">
             {s.city && (
@@ -60,7 +68,7 @@ export function SupplierCard({ s, delay = 0, rating }: { s: SupplierWithCats; de
               </>
             )}
           </span>
-          <Link href={`/orcamento?fornecedor=${s.slug}`} className="btn btn--magenta btn--sm">
+          <Link href={`/orcamento?fornecedor=${s.slug}`} prefetch={false} className="btn btn--magenta btn--sm">
             Solicitar
           </Link>
         </div>
@@ -73,8 +81,8 @@ type ArticleWithSection = Article & { section: ArticleSection | null; authorRef?
 
 export function PostCard({ a, delay = 0 }: { a: ArticleWithSection; delay?: number }) {
   return (
-    <Link href={`/informe-se/${a.slug}`} className="post-card" data-reveal style={{ ["--d" as string]: `${delay}s` }}>
-      <div className="post-card__img">{a.cover && <img src={a.cover} alt="" loading="lazy" />}</div>
+    <Link href={`/informe-se/${a.slug}`} prefetch={false} className="post-card" data-reveal style={{ ["--d" as string]: `${delay}s` }}>
+      <div className="post-card__img">{a.cover && <Image src={a.cover} alt="" fill sizes="(max-width: 680px) 100vw, (max-width: 1100px) 50vw, 390px" quality={72} />}</div>
       <div>
         <div className="meta">
           {a.section && <b>{a.section.name}</b>}
@@ -93,7 +101,7 @@ export function AgendaCard({ item, kind, delay = 0 }: { item: Event | Course; ki
   const href = kind === "evento" ? `/eventos/${item.slug}` : `/cursos/${item.slug}`;
   const where = "venue" in item ? [item.venue, item.city].filter(Boolean).join(" · ") : item.mode === "online" ? "Online" : item.mode === "hibrido" ? "Híbrido" : "Presencial";
   return (
-    <Link href={href} className="agenda-card" data-reveal style={{ ["--d" as string]: `${delay}s` }}>
+    <Link href={href} prefetch={false} className="agenda-card" data-reveal style={{ ["--d" as string]: `${delay}s` }}>
       <div className={`date-block${kind === "curso" ? " date-block--teal" : ""}`}>
         {d ? (
           <>

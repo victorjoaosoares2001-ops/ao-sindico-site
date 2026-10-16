@@ -52,7 +52,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <div className="footer__top">
             <div className="footer__about">
               <div className="footer__brand">
-                <img src="/logo-full-dark.png" alt="Ao Síndico — Atender, Informar, Inovar" />
+                <img src="/logo-full-dark.webp" alt="Ao Síndico — Atender, Informar, Inovar" width={320} height={284} loading="lazy" decoding="async" />
               </div>
               <p>{s.about_text}</p>
               <div style={{ maxWidth: 380 }}>

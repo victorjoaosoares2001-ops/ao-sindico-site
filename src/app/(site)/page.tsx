@@ -12,7 +12,7 @@ import {
   portalNumbers,
   publishedCategories,
   ratings,
-  supplierCardInclude,
+  supplierCardSelect,
   upcomingCourses,
   upcomingEvents,
   youtubeId,
@@ -26,7 +26,7 @@ export default async function HomePage() {
     publishedCategories(),
     db.supplier.findMany({
       where: { published: true, featured: true },
-      include: supplierCardInclude,
+      select: supplierCardSelect,
       orderBy: [{ plan: "desc" }, { order: "asc" }, { updatedAt: "desc" }],
       take: 6,
     }),

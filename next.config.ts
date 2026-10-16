@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 2_678_400,
+    remotePatterns: [
+      { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
+      { protocol: "https", hostname: "aosindico.com" },
+      { protocol: "https", hostname: "www.aosindico.com" },
+      { protocol: "https", hostname: "i.ytimg.com" },
+    ],
+  },
   experimental: {
     serverActions: { bodySizeLimit: "8mb" },
   },

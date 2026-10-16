@@ -1,11 +1,12 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { db } from "./db";
 
 /**
  * Quais seções têm conteúdo publicado. Seções vazias somem do menu, do rodapé e do
  * sitemap, e a página delas responde 404 — reaparecem sozinhas quando a equipe publicar algo.
  */
-export const sectionAvailability = cache(async () => {
+const loadSectionAvailability = unstable_cache(async () => {
   const [videos, courses, partners, events, authors, questions] = await Promise.all([
     db.video.count({ where: { published: true } }),
     db.course.count({ where: { published: true } }),
@@ -22,7 +23,9 @@ export const sectionAvailability = cache(async () => {
     "/colunistas": authors > 0,
     "/tira-duvidas": true, // sempre aberta: tem o formulário de perguntas
   } as Record<string, boolean>;
-});
+}, ["public-section-availability"], { revalidate: 900, tags: ["portal-content"] });
+
+export const sectionAvailability = cache(loadSectionAvailability);
 
 /** true se o link deve aparecer (rotas fora da lista sempre aparecem). */
 export function isAvailable(map: Record<string, boolean>, href: string) {

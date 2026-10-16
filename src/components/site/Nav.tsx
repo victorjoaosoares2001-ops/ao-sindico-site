@@ -74,7 +74,7 @@ export function Nav({ whatsappHref, hidden = [] }: { whatsappHref: string | null
           <ul>
             {UTIL.filter(show).map((l) => (
               <li key={l.href}>
-                <Link href={l.href} aria-current={isActive(l.href) ? "page" : undefined}>
+                <Link href={l.href} prefetch={false} aria-current={isActive(l.href) ? "page" : undefined}>
                   {l.label}
                 </Link>
               </li>
@@ -89,12 +89,12 @@ export function Nav({ whatsappHref, hidden = [] }: { whatsappHref: string | null
           </ul>
           <ul>
             <li>
-              <Link href="/anuncie" className="nav__util-strong">
+              <Link href="/anuncie" prefetch={false} className="nav__util-strong">
                 <Icon name="megaphone" size={14} /> Anuncie
               </Link>
             </li>
             <li>
-              <Link href="/admin" className="nav__util-strong">
+              <Link href="/admin" prefetch={false} className="nav__util-strong">
                 <Icon name="users" size={14} /> Entrar
               </Link>
             </li>
@@ -102,13 +102,13 @@ export function Nav({ whatsappHref, hidden = [] }: { whatsappHref: string | null
         </div>
         <div className="container">
           <nav className="nav__bar" aria-label="Principal">
-            <Link href="/" aria-label="Início">
+            <Link href="/" prefetch={false} aria-label="Início">
               <Logo />
             </Link>
             <ul className="nav__links">
               {MAIN.filter(show).map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} aria-current={isActive(l.href) ? "page" : undefined}>
+                  <Link href={l.href} prefetch={false} aria-current={isActive(l.href) ? "page" : undefined}>
                     {l.label}
                   </Link>
                 </li>
@@ -118,7 +118,7 @@ export function Nav({ whatsappHref, hidden = [] }: { whatsappHref: string | null
               <button className="nav__icon" aria-label="Buscar no portal" onClick={() => setSearch(true)}>
                 <Icon name="search" size={19} />
               </button>
-              <Link href="/orcamento" className={`btn btn--arrow nav__quote ${scrolled ? "" : "btn--yellow"}`}>
+              <Link href="/orcamento" prefetch={false} className={`btn btn--arrow nav__quote ${scrolled ? "" : "btn--yellow"}`}>
                 Solicitar orçamento
                 <span className="btn__dot">
                   <Icon name="arrowUpRight" size={16} />
@@ -144,7 +144,7 @@ export function Nav({ whatsappHref, hidden = [] }: { whatsappHref: string | null
         </form>
         <div className="search-overlay__hints">
           {["Portaria", "Pintura predial", "Impermeabilização", "Síndico profissional", "Assembleia", "Inadimplência"].map((s) => (
-            <Link key={s} href={`/busca?q=${encodeURIComponent(s)}`}>
+            <Link key={s} href={`/busca?q=${encodeURIComponent(s)}`} prefetch={false}>
               {s}
             </Link>
           ))}
@@ -166,21 +166,21 @@ export function Nav({ whatsappHref, hidden = [] }: { whatsappHref: string | null
         <ul className="sheet__links">
           {[{ href: "/", label: "Início" }, ...MAIN, ...UTIL, { href: "/contato", label: "Contato" }].filter(show).map((l) => (
             <li key={l.href}>
-              <Link href={l.href}>
+              <Link href={l.href} prefetch={false}>
                 {l.label} <Icon name="arrowRight" />
               </Link>
             </li>
           ))}
         </ul>
         <div className="sheet__actions">
-          <Link href="/orcamento" className="btn btn--yellow btn--block">
+          <Link href="/orcamento" prefetch={false} className="btn btn--yellow btn--block">
             Solicitar orçamento grátis
           </Link>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <Link href="/anuncie" className="btn btn--glass btn--block">
+            <Link href="/anuncie" prefetch={false} className="btn btn--glass btn--block">
               <Icon name="megaphone" size={16} /> Anuncie
             </Link>
-            <Link href="/admin" className="btn btn--glass btn--block">
+            <Link href="/admin" prefetch={false} className="btn btn--glass btn--block">
               <Icon name="users" size={16} /> Entrar
             </Link>
           </div>

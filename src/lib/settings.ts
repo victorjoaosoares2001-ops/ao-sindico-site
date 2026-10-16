@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { db } from "./db";
 
 /**
@@ -167,12 +168,14 @@ export type Settings = Record<SettingKey, string>;
 
 export const SETTING_DEFAULTS = Object.fromEntries(SETTING_GROUPS.flatMap((g) => g.fields.map((f) => [f.key, f.default]))) as Settings;
 
-export const getSettings = cache(async (): Promise<Settings> => {
+const loadSettings = unstable_cache(async (): Promise<Settings> => {
   const rows = await db.siteSetting.findMany();
   const out = { ...SETTING_DEFAULTS };
   for (const r of rows) if (r.key in out) out[r.key as SettingKey] = r.value;
   return out;
-});
+}, ["public-site-settings"], { revalidate: 3600, tags: ["site-settings"] });
+
+export const getSettings = cache(loadSettings);
 
 export const lines = (s: string) =>
   s

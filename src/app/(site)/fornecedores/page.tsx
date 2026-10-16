@@ -5,7 +5,7 @@ import { Icon } from "@/components/Icon";
 import { SupplierCard } from "@/components/site/Cards";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import { activeCampaigns, adHref, PRO_SLUG, publishedCategories, ratings, supplierCardInclude } from "@/lib/queries";
+import { activeCampaigns, adHref, PRO_SLUG, publishedCategories, ratings, supplierCardSelect } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Fornecedores para condomínios",
@@ -38,7 +38,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
 
   const [total, suppliers, ads] = await Promise.all([
     db.supplier.count({ where }),
-    db.supplier.findMany({ where, include: supplierCardInclude, orderBy, take: PER_PAGE, skip: (page - 1) * PER_PAGE }),
+    db.supplier.findMany({ where, select: supplierCardSelect, orderBy, take: PER_PAGE, skip: (page - 1) * PER_PAGE }),
     activeCampaigns("fornecedores", 1),
   ]);
   const pages = Math.ceil(total / PER_PAGE);
@@ -95,11 +95,11 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
           </form>
 
           <div className="pills" aria-label="Categorias">
-            <Link href={qs({ categoria: undefined, pagina: undefined })} aria-current={!current}>
+            <Link href={qs({ categoria: undefined, pagina: undefined })} prefetch={false} aria-current={!current}>
               Todas
             </Link>
             {categories.map((c) => (
-              <Link key={c.id} href={qs({ categoria: c.slug, pagina: undefined })} aria-current={current?.id === c.id}>
+              <Link key={c.id} href={qs({ categoria: c.slug, pagina: undefined })} prefetch={false} aria-current={current?.id === c.id}>
                 {c.name}
               </Link>
             ))}
@@ -111,11 +111,11 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
             </p>
             <p className="result-count">
               Ordenar:{" "}
-              <Link href={qs({ ordem: undefined })} style={{ fontWeight: sp.ordem === "az" ? 400 : 700 }}>
+              <Link href={qs({ ordem: undefined })} prefetch={false} style={{ fontWeight: sp.ordem === "az" ? 400 : 700 }}>
                 Destaques
               </Link>{" "}
               ·{" "}
-              <Link href={qs({ ordem: "az" })} style={{ fontWeight: sp.ordem === "az" ? 700 : 400 }}>
+              <Link href={qs({ ordem: "az" })} prefetch={false} style={{ fontWeight: sp.ordem === "az" ? 700 : 400 }}>
                 A–Z
               </Link>
             </p>
@@ -131,7 +131,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
           {suppliers.length > 0 ? (
             <div className="sup-grid">
               {suppliers.map((s, i) => (
-                <SupplierCard key={s.id} s={s} rating={rate.get(s.id)} delay={(i % 3) * 0.05} />
+                <SupplierCard key={s.id} s={s} rating={rate.get(s.id)} delay={(i % 3) * 0.05} priority={i < 3} />
               ))}
             </div>
           ) : (
@@ -148,7 +148,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
           {pages > 1 && (
             <nav className="pills" style={{ justifyContent: "center", marginTop: 40 }} aria-label="Páginas">
               {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-                <Link key={n} href={qs({ pagina: String(n) })} aria-current={n === page}>
+                <Link key={n} href={qs({ pagina: String(n) })} prefetch={false} aria-current={n === page}>
                   {n}
                 </Link>
               ))}

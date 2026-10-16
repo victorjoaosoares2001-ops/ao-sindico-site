@@ -4,7 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { Icon } from "@/components/Icon";
 import { SupplierCard } from "@/components/site/Cards";
 import { db } from "@/lib/db";
-import { PRO_SLUG, ratings, supplierCardInclude } from "@/lib/queries";
+import { PRO_SLUG, ratings, supplierCardSelect } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
@@ -28,7 +28,7 @@ export default async function ProsPage({ searchParams }: { searchParams: Promise
   const [s, total, pros] = await Promise.all([
     getSettings(),
     db.supplier.count({ where }),
-    db.supplier.findMany({ where, include: supplierCardInclude, orderBy: [{ featured: "desc" }, { plan: "desc" }, { order: "asc" }, { name: "asc" }], take: PER_PAGE, skip: (page - 1) * PER_PAGE }),
+    db.supplier.findMany({ where, select: supplierCardSelect, orderBy: [{ featured: "desc" }, { plan: "desc" }, { order: "asc" }, { name: "asc" }], take: PER_PAGE, skip: (page - 1) * PER_PAGE }),
   ]);
   const rate = await ratings(pros.map((p) => p.id));
   const pages = Math.ceil(total / PER_PAGE);
@@ -84,7 +84,7 @@ export default async function ProsPage({ searchParams }: { searchParams: Promise
           {pros.length > 0 ? (
             <div className="sup-grid">
               {pros.map((p, i) => (
-                <SupplierCard key={p.id} s={p} rating={rate.get(p.id)} delay={(i % 3) * 0.05} />
+                <SupplierCard key={p.id} s={p} rating={rate.get(p.id)} delay={(i % 3) * 0.05} priority={i < 3} />
               ))}
             </div>
           ) : (
@@ -100,7 +100,7 @@ export default async function ProsPage({ searchParams }: { searchParams: Promise
           {pages > 1 && (
             <nav className="pills" style={{ justifyContent: "center", marginTop: 40 }} aria-label="Páginas">
               {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-                <Link key={n} href={link(n)} aria-current={n === page}>
+                <Link key={n} href={link(n)} prefetch={false} aria-current={n === page}>
                   {n}
                 </Link>
               ))}

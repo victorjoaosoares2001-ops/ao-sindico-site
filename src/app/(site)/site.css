@@ -1075,6 +1075,7 @@
 
 .sup-card__media {
   position: relative;
+  height: 181px;
   aspect-ratio: 16 / 10;
   background:
     radial-gradient(70% 80% at 100% 0%, rgba(7, 151, 163, 0.45), transparent 70%),
@@ -1166,7 +1167,7 @@
   padding: 6px;
 }
 
-.sup-card__media:has(.sup-card__logo) {
+.sup-card__media--with-logo {
   overflow: visible;
 }
 
@@ -2233,6 +2234,7 @@
 }
 
 .post-card__img {
+  position: relative;
   aspect-ratio: 16 / 10;
   border-radius: var(--r-lg);
   overflow: hidden;
@@ -2350,6 +2352,11 @@
 /* ---------- Revelação ao rolar ---------- */
 
 [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+[data-reveal="pending"] {
   opacity: 0;
   transform: translateY(22px);
   transition:
@@ -2368,11 +2375,6 @@
     opacity: 1;
     transform: none;
   }
-}
-
-html:not(.js) [data-reveal] {
-  opacity: 1;
-  transform: none;
 }
 
 /* =========================================================
@@ -3323,7 +3325,7 @@ body {
     radial-gradient(48% 38% at 0% 100%, rgba(241, 244, 247, 0.8), transparent 62%),
     radial-gradient(40% 30% at 85% 40%, rgba(7, 151, 163, 0.035), transparent 65%),
     linear-gradient(180deg, #ffffff 0%, #fbfcfd 38%, #f4f6f8 100%);
-  background-attachment: fixed;
+  background-attachment: scroll;
 }
 
 /* Lavagem de cor neutra (tons de branco) em todas as seções */
@@ -3599,14 +3601,38 @@ a:hover .logo__main strong,
   transform: rotate(-45deg);
 }
 
-/* Letreiro SEMPRE animado, mesmo com "reduzir movimento" do sistema ligado */
-@media (prefers-reduced-motion: reduce) {
-  .marquee__track {
-    animation-duration: 18s !important;
-    animation-iteration-count: infinite !important;
-    animation-play-state: running !important;
-  }
+/* Modo econômico automático para máquinas com pouca memória/CPU ou conexão 2G. */
+html.lite *,
+html.lite *::before,
+html.lite *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
+
+html.lite .nav__bar,
+html.lite .btn--glass,
+html.lite .chip--glass,
+html.lite .glass-card,
+html.lite .band--dark .cat-card {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html.lite [data-reveal] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.sup-card,
+.post-card,
+.agenda-card,
+.cat-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 430px;
+}
+
 .ad {
   aspect-ratio: auto;
   background: #fff;

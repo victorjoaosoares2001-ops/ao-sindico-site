@@ -109,6 +109,9 @@ model Supplier {
   contacts    QuoteContact[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+
+  @@index([published, featured, plan, order, name])
+  @@index([published, city])
 }
 
 model Review {

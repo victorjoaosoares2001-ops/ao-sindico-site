@@ -1,7 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { logAction } from "@/lib/audit";
 import { checkAdmin, clearSession, getCurrentUser, requireAdmin, setSession } from "@/lib/auth";
@@ -22,6 +22,8 @@ export type FormState = { error?: string; ok?: string; link?: string };
 const NO_PERMISSION: FormState = { error: "Você não tem permissão para esta ação. Fale com a administração." };
 
 function refreshSite() {
+  revalidateTag("portal-content");
+  revalidateTag("site-settings");
   revalidatePath("/", "layout");
 }
 

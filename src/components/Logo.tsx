@@ -6,7 +6,7 @@
 export function Logo({ tone = "dark", compact = false }: { tone?: "dark" | "light"; compact?: boolean }) {
   return (
     <span className={`logo logo--${tone}`} aria-label="Portal Ao Síndico">
-      <img className="logo__icon" src="/logo-icon.png" alt="" width={27} height={38} />
+      <img className="logo__icon" src="/logo-icon.webp" alt="" width={27} height={38} decoding="async" fetchPriority="high" />
       {!compact && <span className="logo__portal">Portal</span>}
       <span className="logo__main">
         <strong>AoSíndico</strong>

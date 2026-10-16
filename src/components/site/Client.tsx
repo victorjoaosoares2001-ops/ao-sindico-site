@@ -10,6 +10,16 @@ export function RevealObserver() {
   const pathname = usePathname();
   useEffect(() => {
     const els = document.querySelectorAll<HTMLElement>("[data-reveal]:not([data-reveal='in'])");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const lite = document.documentElement.classList.contains("lite");
+
+    // Conteúdo é visível por padrão. Em navegador antigo, modo econômico ou caso
+    // o JS demore/falhe, nada fica preso com opacity: 0.
+    if (!("IntersectionObserver" in window) || reduced || lite) {
+      els.forEach((el) => (el.dataset.reveal = "in"));
+      return;
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -21,8 +31,23 @@ export function RevealObserver() {
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0.08 },
     );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    els.forEach((el) => {
+      // Acima da dobra entra pronto; só itens realmente abaixo da tela animam.
+      if (el.getBoundingClientRect().top <= window.innerHeight * 1.05) el.dataset.reveal = "in";
+      else {
+        el.dataset.reveal = "pending";
+        io.observe(el);
+      }
+    });
+    // Rede/CPU lenta nunca pode deixar informação invisível indefinidamente.
+    const fallback = window.setTimeout(() => {
+      els.forEach((el) => (el.dataset.reveal = "in"));
+      io.disconnect();
+    }, 2400);
+    return () => {
+      window.clearTimeout(fallback);
+      io.disconnect();
+    };
   }, [pathname]);
   return null;
 }
@@ -40,7 +65,7 @@ export function MobileBar({ whatsappHref }: { whatsappHref: string | null }) {
   if (pathname.startsWith("/orcamento")) return null;
   return (
     <div className="mobile-bar" data-show={show}>
-      <Link href="/orcamento" className="btn btn--yellow">
+      <Link href="/orcamento" prefetch={false} className="btn btn--yellow">
         Solicitar orçamento grátis
       </Link>
       {whatsappHref && (
@@ -62,7 +87,7 @@ export function Scroller({ children, label }: { children: React.ReactNode; label
   useEffect(() => {
     const el = ref.current;
     if (!el || el.childElementCount < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.classList.contains("lite")) return;
     let paused = false;
     const onEnter = () => { paused = true; };
     const onLeave = () => { paused = false; };

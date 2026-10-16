@@ -1,12 +1,29 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { db } from "./db";
 
 export const supplierCardInclude = { categories: { select: { name: true, slug: true } } } as const;
+export const supplierCardSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  tagline: true,
+  description: true,
+  logo: true,
+  cover: true,
+  city: true,
+  state: true,
+  plan: true,
+  featured: true,
+  categories: { select: { name: true, slug: true } },
+} as const;
+export type SupplierCardData = Prisma.SupplierGetPayload<{ select: typeof supplierCardSelect }>;
 
 export const PRO_SLUG = "sindico-profissional";
 
 /** Anúncios no ar para uma posição (datas + status), por prioridade. */
-export function activeCampaigns(placement: string, take = 6) {
+const loadActiveCampaigns = unstable_cache((placement: string, take: number) => {
   const now = new Date();
   return db.campaign.findMany({
     where: {
@@ -18,14 +35,22 @@ export function activeCampaigns(placement: string, take = 6) {
     orderBy: [{ order: "desc" }, { createdAt: "desc" }],
     take,
   });
+}, ["public-active-campaigns"], { revalidate: 60, tags: ["portal-content"] });
+
+export function activeCampaigns(placement: string, take = 6) {
+  return loadActiveCampaigns(placement, take);
 }
 
 /** Link rastreado do anúncio (conta o clique e redireciona). */
 export const adHref = (id: string) => `/anuncio/${id}`;
 
-export const publishedCategories = cache(() =>
+const loadPublishedCategories = unstable_cache(() =>
   db.category.findMany({ where: { published: true, slug: { not: PRO_SLUG } }, orderBy: [{ order: "asc" }, { name: "asc" }] }),
+  ["public-supplier-categories"],
+  { revalidate: 900, tags: ["portal-content"] },
 );
+
+export const publishedCategories = cache(loadPublishedCategories);
 
 export async function upcomingEvents(take = 3) {
   const now = new Date();
@@ -73,7 +98,7 @@ export async function globalSearch(q: string, take = 8) {
   const [suppliers, articles, questions, events, courses, videos] = await Promise.all([
     db.supplier.findMany({
       where: { published: true, OR: [{ name: c }, { services: c }, { tagline: c }, { description: c }, { city: c }, { categories: { some: { name: c } } }] },
-      include: supplierCardInclude,
+      select: supplierCardSelect,
       orderBy: [{ featured: "desc" }, { plan: "desc" }, { name: "asc" }],
       take,
     }),

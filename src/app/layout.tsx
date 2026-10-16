@@ -20,7 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: "Ao Síndico — orçamentos, fornecedores e conteúdo para condomínios", template: "%s | Ao Síndico" },
     description: s.seo_description,
     openGraph: { type: "website", locale: "pt_BR", siteName: "Ao Síndico" },
-    icons: { icon: [{ url: "/logo-icon.png", type: "image/png" }] },
+    // SVG de 318 bytes no lugar do PNG grande usado anteriormente como favicon.
+    icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }] },
   };
 }
 
@@ -34,7 +35,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${sans.variable} ${serif.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var c=navigator.connection,m=navigator.deviceMemory||0,h=navigator.hardwareConcurrency||0;if(c&&(c.saveData||/slow-2g|2g/.test(c.effectiveType))||(m&&m<=4)||(h&&h<=4))document.documentElement.classList.add('lite')}catch(e){}",
+          }}
+        />
       </head>
       <body>{children}</body>
     </html>

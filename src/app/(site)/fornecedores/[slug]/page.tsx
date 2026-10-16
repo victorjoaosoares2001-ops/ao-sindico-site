@@ -8,7 +8,7 @@ import { QuoteForm } from "@/components/site/QuoteForm";
 import { db } from "@/lib/db";
 import { formatDate, splitList, whatsappLink } from "@/lib/format";
 import { submitReview } from "@/lib/public-actions";
-import { PRO_SLUG, publishedCategories, ratings, supplierCardInclude } from "@/lib/queries";
+import { PRO_SLUG, publishedCategories, ratings, supplierCardInclude, supplierCardSelect } from "@/lib/queries";
 
 type Params = Promise<{ slug: string }>;
 
@@ -31,7 +31,7 @@ export default async function SupplierPage({ params }: { params: Params }) {
     publishedCategories(),
     db.supplier.findMany({
       where: { published: true, id: { not: s.id }, categories: { some: { slug: { in: s.categories.map((c) => c.slug) } } } },
-      include: supplierCardInclude,
+      select: supplierCardSelect,
       orderBy: [{ featured: "desc" }, { plan: "desc" }, { order: "asc" }],
       take: 3,
     }),
