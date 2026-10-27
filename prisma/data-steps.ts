@@ -365,6 +365,20 @@ async function main() {
     return `${created} banners importados`;
   });
 
+  //    Empresa sem logo nem capa mas com banner próprio (ex.: MVT): o banner vira a capa do cartão.
+  //    Banner nunca vira logo (foi o erro da Polytel).
+  await step("capa-do-banner-v1", async () => {
+    const list = await db.supplier.findMany({ where: { logo: null, cover: null }, select: { id: true, name: true, campaigns: { where: { image: { not: null } }, select: { image: true }, take: 1 } } });
+    const done: string[] = [];
+    for (const s of list) {
+      const img = s.campaigns[0]?.image;
+      if (!img) continue;
+      await db.supplier.update({ where: { id: s.id }, data: { cover: img } });
+      done.push(s.name);
+    }
+    return done.length ? `capa: ${done.join(", ")}` : "nenhuma";
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.

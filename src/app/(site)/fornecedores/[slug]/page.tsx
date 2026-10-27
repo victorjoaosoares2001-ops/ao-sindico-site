@@ -5,12 +5,11 @@ import { Icon } from "@/components/Icon";
 import { AdCarousel } from "@/components/site/AdCarousel";
 import { initials, SupplierCard } from "@/components/site/Cards";
 import { ReviewForm } from "@/components/site/Forms";
-import { QuoteForm } from "@/components/site/QuoteForm";
 import { db } from "@/lib/db";
 import { formatDate, slugify, splitList, whatsappLink } from "@/lib/format";
 import { submitReview } from "@/lib/public-actions";
 import { getSettings } from "@/lib/settings";
-import { activeCampaigns, PRO_SLUG, publishedCategories, ratings, supplierCardInclude, supplierCardSelect } from "@/lib/queries";
+import { activeCampaigns, PRO_SLUG, ratings, supplierCardInclude, supplierCardSelect } from "@/lib/queries";
 
 type Params = Promise<{ slug: string }>;
 
@@ -34,8 +33,7 @@ export default async function SupplierPage({ params }: { params: Params }) {
   if (!s) notFound();
   const isPro = s.categories.some((c) => c.slug === PRO_SLUG);
 
-  const [categories, related, reviews, settings, ads] = await Promise.all([
-    publishedCategories(),
+  const [related, reviews, settings, ads] = await Promise.all([
     db.supplier.findMany({
       where: { published: true, id: { not: s.id }, categories: { some: { slug: { in: s.categories.map((c) => c.slug) } } } },
       select: supplierCardSelect,
@@ -51,8 +49,6 @@ export default async function SupplierPage({ params }: { params: Params }) {
   const services = splitList(s.services);
   // A Ao Síndico intermedeia: o site não mostra WhatsApp/telefone/e-mail da empresa (ficam só no painel).
   const teamWa = whatsappLink(settings.whatsapp, `Olá! Vi a ${s.name} no portal Ao Síndico e gostaria do contato.`);
-  const quoteCats = categories.map((c) => ({ name: c.name, icon: c.icon }));
-  const firstCat = s.categories.find((c) => c.slug !== PRO_SLUG)?.name;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -122,8 +118,9 @@ export default async function SupplierPage({ params }: { params: Params }) {
                 </div>
               </div>
             )}
+            {(s.website || s.instagram || s.facebook || s.city || s.address) && (
             <div className="card" data-reveal>
-              <h2>Contato</h2>
+              <h2>Na internet</h2>
               <ul className="contact-list">
                 {s.website && (
                   <li>
@@ -153,21 +150,9 @@ export default async function SupplierPage({ params }: { params: Params }) {
                     </span>
                   </li>
                 )}
-                <li>
-                  <span>
-                    <Icon name="inbox" /> O contato com a {s.name} é feito pela equipe Ao Síndico: preencha o pedido ao lado
-                    {teamWa ? " ou fale com a gente no WhatsApp" : ""} e nós fazemos a ponte.
-                  </span>
-                </li>
-                {teamWa && (
-                  <li>
-                    <a href={teamWa} target="_blank" rel="noopener">
-                      <Icon name="whatsapp" /> Falar com a Ao Síndico
-                    </a>
-                  </li>
-                )}
               </ul>
             </div>
+            )}
 
             <div className="card" id="avaliacoes" data-reveal style={{ scrollMarginTop: 110 }}>
               <h2>
@@ -212,17 +197,30 @@ export default async function SupplierPage({ params }: { params: Params }) {
           </div>
 
           <aside className="sticky-aside">
-            <div className="glass-card glass-card--light">
-              <QuoteForm
-                tone="light"
-                title="Fale com a Ao Síndico"
-                subtitle={`Quer o contato ${isPro ? "deste síndico" : "desta empresa"}? Deixe seus dados: a equipe Ao Síndico fala com você e faz a intermediação.`}
-                categories={isPro ? [{ name: "Síndico Profissional", icon: "users" }, ...quoteCats] : quoteCats}
-                preselected={[s.id]}
-                initial={{ category: isPro ? "Síndico Profissional" : firstCat }}
-                source={`fornecedor:${s.slug}`}
-                compact
-              />
+            {/* Pedido da Luiza: nada de pedir orçamento direto à empresa pelo site. A pessoa fala
+                com a Ao Síndico, que sabe quais condomínios querem cada empresa e faz a ponte. */}
+            <div className="aside-box">
+              <h3>Quer falar com {isPro ? "este síndico" : "esta empresa"}?</h3>
+              <p style={{ fontSize: 14, color: "var(--ink-2)", marginBottom: 16 }}>
+                O contato com a {s.name} é feito pela equipe Ao Síndico. Fale com a gente e nós fazemos a intermediação.
+              </p>
+              <div style={{ display: "grid", gap: 10 }}>
+                {teamWa && (
+                  <a href={teamWa} target="_blank" rel="noopener" className="btn btn--block" style={{ background: "#25D366", color: "#fff" }}>
+                    <Icon name="whatsapp" /> WhatsApp da Ao Síndico
+                  </a>
+                )}
+                {settings.phone && (
+                  <a href={`tel:${settings.phone.replace(/\D/g, "")}`} className="btn btn--ghost btn--block">
+                    <Icon name="phone" /> {settings.phone}
+                  </a>
+                )}
+                {settings.email && (
+                  <a href={`mailto:${settings.email}?subject=${encodeURIComponent(`Contato: ${s.name}`)}`} className="btn btn--ghost btn--block">
+                    <Icon name="mail" /> {settings.email}
+                  </a>
+                )}
+              </div>
             </div>
             <div style={{ marginTop: 18 }}>
               <AdCarousel ads={ads.filter((a) => a.supplierId !== s.id)} />

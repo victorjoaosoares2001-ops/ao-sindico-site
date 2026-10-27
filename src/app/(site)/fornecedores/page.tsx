@@ -36,11 +36,22 @@ export default async function SuppliersPage({ searchParams }: { searchParams: SP
   const orderBy: Prisma.SupplierOrderByWithRelationInput[] =
     sp.ordem === "az" ? [{ name: "asc" }] : [{ featured: "desc" }, { plan: "desc" }, { order: "asc" }, { name: "asc" }];
 
-  const [total, suppliers, ads] = await Promise.all([
+  // Empresas ainda sem logo nem capa vão para o fim da lista (a ordem da equipe vale dentro de cada grupo),
+  // para o guia não abrir com cartões em branco.
+  const withImage: Prisma.SupplierWhereInput = { AND: [where, { OR: [{ logo: { not: null } }, { cover: { not: null } }] }] };
+  const noImage: Prisma.SupplierWhereInput = { AND: [where, { logo: null, cover: null }] };
+  const skip = (page - 1) * PER_PAGE;
+  const [total, imaged, first, ads] = await Promise.all([
     db.supplier.count({ where }),
-    db.supplier.findMany({ where, select: supplierCardSelect, orderBy, take: PER_PAGE, skip: (page - 1) * PER_PAGE }),
+    db.supplier.count({ where: withImage }),
+    db.supplier.findMany({ where: withImage, select: supplierCardSelect, orderBy, take: PER_PAGE, skip }),
     activeCampaigns("fornecedores", 1),
   ]);
+  const rest =
+    first.length < PER_PAGE
+      ? await db.supplier.findMany({ where: noImage, select: supplierCardSelect, orderBy, take: PER_PAGE - first.length, skip: Math.max(0, skip - imaged) })
+      : [];
+  const suppliers = [...first, ...rest];
   const pages = Math.ceil(total / PER_PAGE);
   const rate = await ratings(suppliers.map((s) => s.id));
 
