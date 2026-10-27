@@ -42,3 +42,11 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 - Orçamento: avança sozinho ao escolher o serviço; nome do condomínio obrigatório; nº de torres/blocos (`Message.towers`) e nº de apartamentos.
 - Home: removidos os contadores (empresas, síndicos, matérias, eventos) a pedido da cliente.
 - Fornecedores (via painel): Pintura e Fachadas organizada na ordem enviada pela cliente; Innovare escondida.
+
+## Pedidos da filha da dona (27/10/2026) — publicado (commit 71a1313)
+- Importador agora lê `antigo.aosindico.com` (aosindico.com é o site novo); `order=az` traz os 58 fornecedores.
+- Etapas `site-antigo-fornecedores-v2` (6 novas, 9 logos corrigidos; não recria removidas nem publica ocultas) e `site-antigo-banners-v1` (29 banners: topo→home, meio→faixa, lateral→lateral).
+- Home: faixa rotativa de logos no fim; faixa do meio vira carrossel. Lateral rotativa em empresa/busca/Tira-Dúvidas (`AdCarousel`).
+- Modo econômico (aparelhos ≤4 GB) não para mais letreiros/carrosséis.
+- Página da empresa: sem WhatsApp/telefone/e-mail da empresa; contato via Ao Síndico.
+- Pendente com a equipe: logos de Aki Limpe, MVT, Domínio Pinturas, CNN, Mega Engenheiros, MDG, Manutentudo (não existem no antigo); texto da Atlas repetido.
