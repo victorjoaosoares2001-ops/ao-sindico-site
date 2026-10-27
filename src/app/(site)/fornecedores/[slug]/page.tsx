@@ -7,7 +7,7 @@ import { initials, SupplierCard } from "@/components/site/Cards";
 import { ReviewForm } from "@/components/site/Forms";
 import { QuoteForm } from "@/components/site/QuoteForm";
 import { db } from "@/lib/db";
-import { formatDate, splitList, whatsappLink } from "@/lib/format";
+import { formatDate, slugify, splitList, whatsappLink } from "@/lib/format";
 import { submitReview } from "@/lib/public-actions";
 import { getSettings } from "@/lib/settings";
 import { activeCampaigns, PRO_SLUG, publishedCategories, ratings, supplierCardInclude, supplierCardSelect } from "@/lib/queries";
@@ -15,7 +15,12 @@ import { activeCampaigns, PRO_SLUG, publishedCategories, ratings, supplierCardIn
 type Params = Promise<{ slug: string }>;
 
 async function load(slug: string) {
-  return db.supplier.findFirst({ where: { slug: { equals: decodeURIComponent(slug), mode: "insensitive" }, published: true }, include: supplierCardInclude });
+  // links do site antigo chegam com espaço/acento ("ECO%20SERVICE"): aceita também o slug limpo
+  const raw = decodeURIComponent(slug);
+  return db.supplier.findFirst({
+    where: { OR: [{ slug: { equals: raw, mode: "insensitive" } }, { slug: slugify(raw) }], published: true },
+    include: supplierCardInclude,
+  });
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -210,10 +215,9 @@ export default async function SupplierPage({ params }: { params: Params }) {
             <div className="glass-card glass-card--light">
               <QuoteForm
                 tone="light"
-                title={isPro ? "Pedir proposta" : "Pedir orçamento"}
-                subtitle={`Pelo Ao Síndico: nossa equipe recebe o seu pedido e faz a ponte com a ${s.name}.`}
+                title="Fale com a Ao Síndico"
+                subtitle={`Quer o contato ${isPro ? "deste síndico" : "desta empresa"}? Deixe seus dados: a equipe Ao Síndico fala com você e faz a intermediação.`}
                 categories={isPro ? [{ name: "Síndico Profissional", icon: "users" }, ...quoteCats] : quoteCats}
-                suppliers={[{ id: s.id, name: s.name }]}
                 preselected={[s.id]}
                 initial={{ category: isPro ? "Síndico Profissional" : firstCat }}
                 source={`fornecedor:${s.slug}`}

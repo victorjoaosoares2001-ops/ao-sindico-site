@@ -8,7 +8,6 @@ import { WhatsappDone } from "./Forms";
 
 type Props = {
   categories: { name: string; icon?: string | null }[];
-  suppliers?: { id: string; name: string }[];
   preselected?: string[];
   initial?: { category?: string; body?: string; city?: string };
   tone?: "dark" | "light";
@@ -50,7 +49,7 @@ const REVIEW_ORDER: [number, string[]][] = [
  * Pedido de orçamento em 5 etapas. Fica salvo em “Orçamentos e mensagens” no painel,
  * onde a equipe encaminha às empresas e acompanha.
  */
-export function QuoteForm({ categories, suppliers = [], preselected = [], initial = {}, tone = "dark", source, title = "Solicitar orçamento", subtitle, compact }: Props) {
+export function QuoteForm({ categories, preselected = [], initial = {}, tone = "dark", source, title = "Solicitar orçamento", subtitle, compact }: Props) {
   const [state, action, pending] = useActionState<PublicFormState, FormData>(submitQuote, {});
   const [step, setStep] = useState(0);
   const [snapshot, setSnapshot] = useState<Record<string, string>>({});
@@ -152,19 +151,11 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
               ))}
             </div>
           </div>
-          {suppliers.length > 0 && (
-            <div className="field">
-              <span>Empresas de interesse (a Ao Síndico faz o contato)</span>
-              <div className="picked">
-                {suppliers.map((s) => (
-                  <label key={s.id}>
-                    <input type="checkbox" name="suppliers" value={s.id} defaultChecked={preselected.includes(s.id)} />
-                    {s.name}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* A Luiza intermedeia: o pedido vai para a Ao Síndico, sem opção de mandar direto à empresa.
+              A empresa de onde a pessoa veio fica registrada no painel. */}
+          {preselected.map((id) => (
+            <input key={id} type="hidden" name="suppliers" value={id} />
+          ))}
         </div>
       </fieldset>
 

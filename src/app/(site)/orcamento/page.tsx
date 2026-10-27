@@ -17,15 +17,6 @@ export default async function QuotePage({ searchParams }: { searchParams: SP }) 
   const allCats = [...categories, ...(pro ? [pro] : [])];
   const picked = sp.fornecedor ? await db.supplier.findFirst({ where: { slug: sp.fornecedor, published: true }, include: { categories: true } }) : null;
   const category = picked?.categories[0] ?? allCats.find((c) => c.slug === sp.categoria);
-  const suppliers = category
-    ? await db.supplier.findMany({
-        where: { published: true, categories: { some: { id: category.id } } },
-        select: { id: true, name: true },
-        orderBy: [{ featured: "desc" }, { plan: "desc" }, { order: "asc" }],
-        take: 8,
-      })
-    : [];
-  if (picked && !suppliers.some((s) => s.id === picked.id)) suppliers.unshift({ id: picked.id, name: picked.name });
 
   return (
     <>
@@ -75,7 +66,6 @@ export default async function QuotePage({ searchParams }: { searchParams: SP }) 
             <QuoteForm
               tone="light"
               categories={allCats.map((c) => ({ name: c.name, icon: c.icon }))}
-              suppliers={suppliers}
               preselected={picked ? [picked.id] : []}
               initial={{ category: category?.name, body: sp.servico, city: sp.cidade }}
               source={picked ? `orcamento:${picked.slug}` : "orcamento"}

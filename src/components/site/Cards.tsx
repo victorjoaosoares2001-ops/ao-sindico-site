@@ -68,8 +68,8 @@ export function SupplierCard({ s, delay = 0, rating, priority = false }: { s: Su
               </>
             )}
           </span>
-          <Link href={`/orcamento?fornecedor=${s.slug}`} prefetch={false} className="btn btn--magenta btn--sm">
-            Solicitar
+          <Link href={`/fornecedores/${s.slug}`} prefetch={false} className="btn btn--magenta btn--sm">
+            Ver empresa
           </Link>
         </div>
       </div>

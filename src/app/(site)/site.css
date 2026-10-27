@@ -3683,7 +3683,8 @@ html.lite [data-reveal] {
   object-fit: contain;
 }
 
-/* Letreiros continuam andando no modo econômico: animação só de transform, custo baixo. */
+/* Letreiros continuam andando no modo econômico e com "efeitos de animação" desligados no
+   Windows (a cliente pediu os logos sempre rotativos; passar o mouse pausa). */
 html.lite .marquee__track {
   animation-duration: 18s !important;
   animation-iteration-count: infinite !important;
@@ -3691,4 +3692,15 @@ html.lite .marquee__track {
 
 html.lite .marquee--logos .marquee__track {
   animation-duration: var(--marquee-s, 90s) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee .marquee__track {
+    animation-duration: 18s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  .marquee.marquee--logos .marquee__track {
+    animation-duration: var(--marquee-s, 90s) !important;
+  }
 }

@@ -87,8 +87,8 @@ export function Scroller({ children, label }: { children: React.ReactNode; label
   useEffect(() => {
     const el = ref.current;
     if (!el || el.childElementCount < 2) return;
-    // roda também no modo econômico (aparelhos simples): é só um scroll a cada 4 s
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // roda sempre (pedido da cliente), inclusive em modo econômico e com animações do Windows
+    // desligadas: é só um scroll a cada 4 s e para quando o mouse/dedo está em cima
     let paused = false;
     const onEnter = () => { paused = true; };
     const onLeave = () => { paused = false; };

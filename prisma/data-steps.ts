@@ -318,6 +318,19 @@ async function main() {
     return `${created} empresas novas, ${logos} logos corrigidos` + (hidden.length ? `; ocultas pela equipe (mantidas ocultas): ${hidden.join(", ")}` : "");
   });
 
+  //    Slugs da 1ª importação saíram do link ainda codificado ("eco-20service"): troca pelo limpo.
+  await step("slugs-limpos-v1", async () => {
+    const items = await json<{ url: string }>("fornecedores");
+    let fixed = 0;
+    for (const s of items) {
+      const seg = s.url.split("/fornecedor/")[1] ?? "";
+      const bad = slugify(seg), good = slugify(decodeURIComponent(seg));
+      if (bad === good || (await db.supplier.findUnique({ where: { slug: good } }))) continue;
+      fixed += (await db.supplier.updateMany({ where: { slug: bad }, data: { slug: good } })).count;
+    }
+    return `${fixed} endereços corrigidos`;
+  });
+
   //    Banners nas mesmas posições do antigo: topo → "home", meio da home → "faixa", coluna lateral → "lateral".
   //    Não duplica banner que já existe (mesma imagem); banner de empresa oculta entra oculto.
   await step("site-antigo-banners-v1", async () => {

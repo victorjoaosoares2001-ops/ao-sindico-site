@@ -408,7 +408,7 @@ export default async function HomePage() {
               <small>Empresas do portal</small>
             </div>
           </div>
-          <div className="marquee marquee--logos" style={{ ["--marquee-s" as string]: `${logos.length * 3}s` }}>
+          <div className="marquee marquee--logos" style={{ ["--marquee-s" as string]: `${logos.length * 2}s` }}>
             <div className="marquee__track">
               {[...logos, ...logos].map((m, i) => (
                 <Link key={i} href={`/fornecedores/${m.slug}`} className="marquee__item" title={m.name} tabIndex={i >= logos.length ? -1 : 0} aria-hidden={i >= logos.length || undefined}>
