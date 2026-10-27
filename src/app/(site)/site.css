@@ -3648,3 +3648,47 @@ html.lite [data-reveal] {
     aspect-ratio: auto;
   }
 }
+
+/* Faixa de logos das empresas (fim da home, como no site antigo) */
+.marquee--logos {
+  padding: 8px 0 20px;
+}
+
+.marquee--logos::after {
+  display: none;
+}
+
+.marquee--logos .marquee__track {
+  gap: 16px;
+  animation-duration: var(--marquee-s, 90s);
+}
+
+.marquee--logos .marquee__item {
+  gap: 0;
+  width: 150px;
+  height: 84px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.marquee--logos .marquee__item::after {
+  display: none;
+}
+
+.marquee--logos img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Letreiros continuam andando no modo econômico: animação só de transform, custo baixo. */
+html.lite .marquee__track {
+  animation-duration: 18s !important;
+  animation-iteration-count: infinite !important;
+}
+
+html.lite .marquee--logos .marquee__track {
+  animation-duration: var(--marquee-s, 90s) !important;
+}

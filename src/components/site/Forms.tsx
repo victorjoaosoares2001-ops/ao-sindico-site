@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Icon } from "@/components/Icon";
 import {
   findCertificate,
@@ -33,6 +33,35 @@ function Done({ message, title }: { message?: string; title: string }) {
   );
 }
 
+/**
+ * Depois de gravar no painel, abre o WhatsApp da Ao Síndico com o resumo já escrito,
+ * para a equipe receber direto no celular e direcionar a quem cuida.
+ */
+export function WhatsappDone({ message, title, link, children }: { message?: string; title: string; link?: string; children?: React.ReactNode }) {
+  useEffect(() => {
+    if (!link) return;
+    const t = setTimeout(() => {
+      window.location.href = link;
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [link]);
+  return (
+    <div className="quote__done" role="status">
+      <span className="quote__done-icon">
+        <Icon name="check" size={26} />
+      </span>
+      <h2 style={{ fontSize: 24 }}>{title}</h2>
+      <p style={{ color: "inherit", opacity: 0.85 }}>{message}</p>
+      {link && (
+        <a href={link} target="_blank" rel="noopener" className="btn btn--wa" style={{ justifySelf: "start", background: "#25D366", color: "#fff" }}>
+          <Icon name="whatsapp" size={18} /> Enviar pelo WhatsApp
+        </a>
+      )}
+      {children}
+    </div>
+  );
+}
+
 const Err = ({ state }: { state: PublicFormState }) =>
   state.error ? (
     <div className="alert alert--error" role="alert">
@@ -42,7 +71,7 @@ const Err = ({ state }: { state: PublicFormState }) =>
 
 export function ContactForm({ type = "anunciar", source, interests }: { type?: "anunciar" | "contato"; source?: string; interests?: string[] }) {
   const [state, action, pending] = useActionState<PublicFormState, FormData>(submitContact, {});
-  if (state.ok) return <Done title="Recebemos sua mensagem" message={state.message} />;
+  if (state.ok) return <WhatsappDone title="Recebemos sua mensagem" message={state.message} link={state.link} />;
   return (
     <form action={action} className="form-grid">
       <input type="hidden" name="type" value={type} />
@@ -58,16 +87,10 @@ export function ContactForm({ type = "anunciar", source, interests }: { type?: "
           <input name="company" className="input" required={type === "anunciar"} autoComplete="organization" maxLength={160} />
         </label>
       </div>
-      <div className="row">
-        <label className="field">
-          <span>E-mail *</span>
-          <input name="email" type="email" className="input" required autoComplete="email" maxLength={160} />
-        </label>
-        <label className="field">
-          <span>WhatsApp *</span>
-          <input name="phone" type="tel" className="input" required inputMode="tel" autoComplete="tel" placeholder="(11) 90000-0000" />
-        </label>
-      </div>
+      <label className="field">
+        <span>WhatsApp com DDD *</span>
+        <input name="phone" type="tel" className="input" required inputMode="tel" autoComplete="tel" placeholder="(11) 90000-0000" pattern="[\d\s()+\-]{10,}" title="Inclua o DDD" />
+      </label>
       {type === "anunciar" ? (
         <div className="row">
           <label className="field">
@@ -133,7 +156,7 @@ export function NewsletterForm() {
 
 export function QuestionForm({ sections }: { sections: { id: string; name: string }[] }) {
   const [state, action, pending] = useActionState<PublicFormState, FormData>(submitQuestion, {});
-  if (state.ok) return <Done title="Pergunta enviada" message={state.message} />;
+  if (state.ok) return <WhatsappDone title="Pergunta enviada" message={state.message} link={state.link} />;
   return (
     <form action={action} className="form-grid">
       <Guard />
@@ -168,12 +191,12 @@ export function QuestionForm({ sections }: { sections: { id: string; name: strin
           <input name="name" className="input" required autoComplete="name" maxLength={120} />
         </label>
         <label className="field">
-          <span>E-mail (para avisarmos da resposta)</span>
-          <input name="email" type="email" className="input" autoComplete="email" maxLength={160} />
+          <span>WhatsApp com DDD *</span>
+          <input name="phone" type="tel" className="input" required inputMode="tel" autoComplete="tel" placeholder="(11) 90000-0000" pattern="[\d\s()+\-]{10,}" title="Inclua o DDD" />
         </label>
       </div>
       <p className="hint" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>
-        Publicamos só a pergunta e a resposta, sem seu e-mail.
+        Publicamos só a pergunta e a resposta. Seu nome e WhatsApp ficam só com a nossa equipe.
       </p>
       <Err state={state} />
       <button className="btn btn--arrow" disabled={pending} style={{ justifySelf: "start" }}>

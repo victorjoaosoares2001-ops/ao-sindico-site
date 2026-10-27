@@ -267,6 +267,91 @@ async function main() {
 
   // 8) Imagens hospedadas no site antigo → armazenamento do projeto (Vercel Blob em produção).
   //    Repete a cada deploy até não sobrar nenhuma referência ao servidor antigo.
+  // 8) Pedidos da cliente (27/10): o que está no site antigo vem para o novo.
+  //    Fornecedores: os 58 do antigo (a 1ª importação pegou 47 — a paginação do antigo repetia empresas).
+  //    Cria só quem nunca existiu (não recria o que a equipe removeu nem publica o que ela ocultou) e
+  //    corrige logo vazio ou logo que na verdade é um banner (Polytel e Innovare vieram com o banner).
+  await step("site-antigo-fornecedores-v2", async () => {
+    const items = await json<{ url: string; name: string; logo: string | null; categories: string[]; services: string[]; description: string | null; email?: string; phone?: string }>("fornecedores");
+    // logo que é banner: mesma imagem de um anúncio, ou cópia (hash do nome) de um banner do site antigo
+    const bannerImages = new Set((await db.campaign.findMany({ select: { image: true } })).map((c) => c.image).filter(Boolean));
+    const bannerHashes = [...(await json<{ image: string }>("banners")).map((b) => b.image), ...SUPPLIERS.map((x) => x.logo ?? "").filter((l) => l.includes("/banners/"))]
+      .map((u) => createHash("sha1").update(u).digest("hex").slice(0, 20));
+    const isBanner = (l: string) => bannerImages.has(l) || l.includes("/storage/banners/") || bannerHashes.some((h) => l.includes(h));
+    const removed = new Set(
+      (await db.auditLog.findMany({ where: { entity: "fornecedores", action: "removeu" }, select: { label: true } })).map((a) => (a.label ?? "").toLowerCase()),
+    );
+    const norm = (t: string) => slugify(t).replace(/-/g, "");
+    const all = await db.supplier.findMany();
+    let created = 0, logos = 0;
+    const hidden: string[] = [];
+    for (const s of items) {
+      const slug = slugify(decodeURIComponent(s.url.split("/fornecedor/")[1] ?? s.name));
+      const logo = s.logo && /\.(jpe?g|png|webp|gif|svg)$/i.test(s.logo) ? s.logo : null;
+      // nome tolerante: "Filemax" no antigo = "Filemax Construtora" cadastrada pela equipe no novo
+      const key = norm(s.name);
+      const found = all.find((x) => x.slug === slug || x.slug === slugify(s.name)) ?? all.find((x) => key.length > 3 && (norm(x.name).startsWith(key) || key.startsWith(norm(x.name))));
+      if (found) {
+        if (!found.published) hidden.push(found.name);
+        const data: Record<string, string> = {};
+        if (logo && (!found.logo || isBanner(found.logo))) data.logo = logo;
+        if (!found.description && s.description) data.description = s.description;
+        if (!found.services && s.services.length) data.services = s.services.join(", ");
+        if (Object.keys(data).length) {
+          await db.supplier.update({ where: { id: found.id }, data });
+          if (data.logo) logos++;
+        }
+        continue;
+      }
+      if (removed.has(s.name.trim().toLowerCase())) continue;
+      const cats = await Promise.all(s.categories.map(ensureCategory));
+      const row = await db.supplier.create({
+        data: {
+          name: s.name.replace(/\s+/g, " ").trim(), slug, logo, description: s.description, services: s.services.join(", ") || null,
+          email: s.email ?? null, phone: s.phone ?? null, order: 200 + created,
+          categories: { connect: cats.map((c) => ({ id: c.id })) },
+        },
+      });
+      all.push(row);
+      created++;
+    }
+    return `${created} empresas novas, ${logos} logos corrigidos` + (hidden.length ? `; ocultas pela equipe (mantidas ocultas): ${hidden.join(", ")}` : "");
+  });
+
+  //    Banners nas mesmas posições do antigo: topo → "home", meio da home → "faixa", coluna lateral → "lateral".
+  //    Não duplica banner que já existe (mesma imagem); banner de empresa oculta entra oculto.
+  await step("site-antigo-banners-v1", async () => {
+    const items = await json<{ image: string; placement: string; title: string | null; link: string | null }>("banners");
+    const existing = (await db.campaign.findMany({ select: { image: true } })).map((c) => c.image ?? "");
+    const suppliers = await db.supplier.findMany({ select: { id: true, name: true, slug: true, published: true } });
+    const norm = (t: string) => slugify(t).replace(/-/g, "");
+    let created = 0;
+    for (const [i, b] of items.entries()) {
+      const hash = createHash("sha1").update(b.image).digest("hex").slice(0, 20);
+      if (existing.some((img) => img === b.image || img.includes(hash))) continue;
+      const linkSlug = b.link?.match(/^\/fornecedor\/([^/?#]+)/)?.[1];
+      const t = b.title ? norm(b.title) : "";
+      const sup =
+        (linkSlug && suppliers.find((s) => s.slug === slugify(decodeURIComponent(linkSlug)))) ||
+        (t.length > 3 ? suppliers.find((s) => norm(s.name).startsWith(t) || t.startsWith(norm(s.name))) : undefined);
+      const link = sup && (!b.link || b.link.startsWith("/fornecedor")) ? `/fornecedores/${sup.slug}` : b.link?.replace(/^\/tiraduvidas/, "/tira-duvidas") ?? null;
+      await db.campaign.create({
+        data: {
+          title: b.title || sup?.name || "Banner",
+          image: b.image,
+          link,
+          placement: b.placement,
+          supplierId: sup?.id ?? null,
+          published: sup ? sup.published : true,
+          order: Math.max(0, 9 - Math.floor(i / 4)), // abaixo dos anúncios novos do comercial
+        },
+      });
+      existing.push(b.image);
+      created++;
+    }
+    return `${created} banners importados`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.

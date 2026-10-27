@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdCarousel } from "@/components/site/AdCarousel";
 import type { Prisma } from "@prisma/client";
 import { Icon } from "@/components/Icon";
 import { QuestionForm } from "@/components/site/Forms";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
-import { activeCampaigns, adHref } from "@/lib/queries";
+import { activeCampaigns } from "@/lib/queries";
 
 export const metadata: Metadata = {
   title: "Tira-Dúvidas: perguntas sobre condomínio",
@@ -29,7 +30,7 @@ export default async function QAPage({ searchParams }: { searchParams: Promise<{
   const [total, items, ads] = await Promise.all([
     db.question.count({ where }),
     db.question.findMany({ where, include: { author: true, section: true }, orderBy: [{ answeredAt: "desc" }, { createdAt: "desc" }], take: PER_PAGE, skip: (page - 1) * PER_PAGE }),
-    activeCampaigns("lateral", 1),
+    activeCampaigns("lateral", 30),
   ]);
   const pages = Math.ceil(total / PER_PAGE);
   const link = (patch: Record<string, string | undefined>) => {
@@ -131,11 +132,9 @@ export default async function QAPage({ searchParams }: { searchParams: Promise<{
                 Solicitar orçamento
               </Link>
             </div>
-            {ads[0]?.image && (
-              <a href={ads[0].link ? adHref(ads[0].id) : "#"} className="aside-ad" target="_blank" rel="noopener sponsored">
-                <img src={ads[0].image} alt={ads[0].title} loading="lazy" />
-              </a>
-            )}
+            <div style={{ marginTop: 18 }}>
+              <AdCarousel ads={ads} />
+            </div>
           </aside>
         </div>
       </section>

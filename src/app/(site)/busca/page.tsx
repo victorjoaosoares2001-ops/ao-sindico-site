@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdCarousel } from "@/components/site/AdCarousel";
 import { Icon } from "@/components/Icon";
 import { AgendaCard, SupplierCard } from "@/components/site/Cards";
 import { formatDate } from "@/lib/format";
-import { activeCampaigns, adHref, globalSearch, ratings } from "@/lib/queries";
+import { activeCampaigns, globalSearch, ratings } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Busca", robots: { index: false } };
 
@@ -11,7 +12,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const q = ((await searchParams).q ?? "").trim().slice(0, 80);
   const r = q.length >= 2 ? await globalSearch(q) : null;
   const total = r ? r.suppliers.length + r.articles.length + r.questions.length + r.events.length + r.courses.length + r.videos.length : 0;
-  const [rate, ads] = await Promise.all([ratings(r?.suppliers.map((s) => s.id) ?? []), activeCampaigns("lateral", 1)]);
+  const [rate, ads] = await Promise.all([ratings(r?.suppliers.map((s) => s.id) ?? []), activeCampaigns("lateral", 30)]);
   const enc = encodeURIComponent(q);
 
   return (
@@ -151,11 +152,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                 Pedir orçamento grátis
               </Link>
             </div>
-            {ads[0]?.image && (
-              <a href={ads[0].link ? adHref(ads[0].id) : "#"} className="aside-ad" target="_blank" rel="noopener sponsored">
-                <img src={ads[0].image} alt={ads[0].title} loading="lazy" />
-              </a>
-            )}
+            <div style={{ marginTop: 18 }}>
+              <AdCarousel ads={ads} />
+            </div>
           </aside>
         </div>
       </section>

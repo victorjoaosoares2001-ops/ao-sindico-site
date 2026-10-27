@@ -7,7 +7,8 @@
 import { load } from "cheerio";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
-const BASE = "https://aosindico.com";
+// aosindico.com agora é o site novo: o portal antigo ficou em antigo.aosindico.com
+const BASE = "https://antigo.aosindico.com";
 const OUT = new URL("../prisma/acervo/", import.meta.url);
 const HEADERS = { "user-agent": "Mozilla/5.0 (migracao Ao Sindico)" };
 const PAUSE = 700;
@@ -26,7 +27,8 @@ async function get(path) {
 const clean = (s) => (s ?? "").replace(/\s+/g, " ").trim();
 const slugify = (t) =>
   t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
-const abs = (src) => (!src ? null : src.startsWith("http") ? src : BASE + (src.startsWith("/") ? "" : "/") + src);
+// URLs de imagem gravadas na forma aosindico.com/storage (a mesma das importações anteriores; legacy-images baixa do antigo)
+const abs = (src) => (!src ? null : (src.startsWith("http") ? src : BASE + (src.startsWith("/") ? "" : "/") + src).replace("//antigo.aosindico.com/", "//aosindico.com/"));
 const MONTHS = { jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6, jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12 };
 
 /** HTML do editor antigo → Markdown simples usado no novo painel. */
@@ -157,11 +159,12 @@ async function artigos() {
 // ---------- Fornecedores ----------
 
 async function listagem(path, linkPart) {
-  const $first = await get(path);
+  // order=az: a ordem padrão ("best") repete empresas entre páginas e esconde outras
+  const $first = await get(`${path}?order=az`);
   const last = Math.max(1, ...$first(`a[href*='page=']`).map((_, a) => +($first(a).attr("href").match(/page=(\d+)/)?.[1] ?? 1)).get());
   const items = [];
   for (let p = 1; p <= last; p++) {
-    const $ = p === 1 ? $first : await get(`${path}?page=${p}`);
+    const $ = p === 1 ? $first : await get(`${path}?order=az&page=${p}`);
     $?.(".single-job-items").each((_, el) => {
       const box = $(el);
       const link = box.find(`a[href*='${linkPart}']`).first().attr("href");
@@ -234,8 +237,30 @@ async function duvidas() {
   await save("duvidas", out);
 }
 
+// ---------- Banners da home antiga (carrossel do topo + coluna lateral) ----------
+
+async function banners() {
+  const $ = await get("/");
+  const out = [];
+  const seen = new Set();
+  const take = (sel, placement) =>
+    $(sel).each((_, img) => {
+      if ($(img).closest(".slick-cloned").length) return;
+      const image = abs($(img).attr("src"));
+      if (!image || seen.has(image)) return;
+      seen.add(image);
+      const href = $(img).closest("a").attr("href") ?? "";
+      out.push({ image, placement, title: clean($(img).attr("alt")) || null, link: /^(https?:|\/)/.test(href) ? href.replace(/^https?:\/\/(www\.|antigo\.)?aosindico\.com/, "") || "/" : null });
+    });
+  take("#slide-top img", "home"); // topo
+  take("#home-pos-banner img", "faixa"); // meio da home
+  take(".google-add img", "lateral"); // coluna lateral
+  await save("banners", out);
+}
+
 const what = process.argv[2] ?? "todos";
 if (what === "fornecedores" || what === "todos") await fornecedores();
 if (what === "sindicos" || what === "todos") await sindicos();
 if (what === "duvidas" || what === "todos") await duvidas();
 if (what === "artigos" || what === "todos") await artigos();
+if (what === "banners" || what === "todos") await banners();

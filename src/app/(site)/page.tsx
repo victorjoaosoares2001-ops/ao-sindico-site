@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { AdCarousel } from "@/components/site/AdCarousel";
 import { AgendaCard, initials, PostCard, SectionHead, SupplierCard } from "@/components/site/Cards";
 import { Scroller } from "@/components/site/Client";
 import { VideoPlayer } from "@/components/site/Forms";
@@ -10,6 +11,7 @@ import {
   activeCampaigns,
   adHref,
   portalNumbers,
+  PRO_SLUG,
   publishedCategories,
   ratings,
   supplierCardSelect,
@@ -21,7 +23,7 @@ import { getSettings, lines } from "@/lib/settings";
 
 export default async function HomePage() {
   const now = new Date();
-  const [s, categories, featured, marquee, articles, events, courses, partners, ads, strip, numbers, questions, videos, authors] = await Promise.all([
+  const [s, categories, featured, marquee, articles, events, courses, partners, ads, strip, numbers, questions, videos, authors, logos] = await Promise.all([
     getSettings(),
     publishedCategories(),
     db.supplier.findMany({
@@ -41,11 +43,17 @@ export default async function HomePage() {
     upcomingCourses(2),
     db.partner.findMany({ where: { published: true }, orderBy: [{ order: "asc" }, { name: "asc" }], take: 12 }),
     activeCampaigns("home"),
-    activeCampaigns("faixa", 1),
+    activeCampaigns("faixa", 8),
     portalNumbers(),
     db.question.findMany({ where: { published: true }, orderBy: [{ answeredAt: "desc" }, { createdAt: "desc" }], take: 4 }),
     db.video.findMany({ where: { published: true }, orderBy: [{ featured: "desc" }, { publishedAt: "desc" }], take: 2 }),
     db.author.findMany({ where: { published: true, articles: { some: { published: true } } }, orderBy: [{ order: "asc" }, { articles: { _count: "desc" } }], take: 8, include: { _count: { select: { articles: true } } } }),
+    // todas as empresas com logo, para a faixa rotativa do fim da página (como no site antigo)
+    db.supplier.findMany({
+      where: { published: true, logo: { not: null }, categories: { none: { slug: PRO_SLUG } } },
+      select: { name: true, slug: true, logo: true },
+      orderBy: [{ featured: "desc" }, { plan: "desc" }, { order: "asc" }, { name: "asc" }],
+    }),
   ]);
 
   const lead = articles.find((a) => a.featured && a.cover) ?? articles.find((a) => a.cover) ?? articles[0];
@@ -54,13 +62,8 @@ export default async function HomePage() {
   const rate = await ratings(featured.map((f) => f.id));
   const formats = lines(s.advertise_formats);
 
-  // números reais, só os que existem
-  const facts = [
-    numbers.suppliers > 0 && { n: numbers.suppliers, l: "empresas no guia" },
-    numbers.pros > 0 && { n: numbers.pros, l: "síndicos profissionais" },
-    numbers.articles > 0 && { n: numbers.articles, l: "matérias publicadas" },
-    numbers.events > 0 && { n: numbers.events, l: numbers.events === 1 ? "evento" : "eventos" },
-  ].filter(Boolean) as { n: number; l: string }[];
+  // A cliente pediu para não mostrar quantidades (condomínios, síndicos, empresas) no site.
+  const facts: { n: number; l: string }[] = [];
 
   return (
     <>
@@ -227,7 +230,7 @@ export default async function HomePage() {
                 </Link>
               ))}
               <Link href="/sindicos-profissionais" className="cat-card" data-reveal>
-                <span className="cat-card__num">{numbers.pros > 0 ? `${numbers.pros} perfis` : "Novo"}</span>
+                <span className="cat-card__num">Ver perfis</span>
                 <span className="cat-card__go">
                   <Icon name="arrowUpRight" size={16} />
                 </span>
@@ -257,12 +260,9 @@ export default async function HomePage() {
       )}
 
       {/* ---------- Faixa de anúncio ---------- */}
-      {strip[0]?.image && (
+      {strip.length > 0 && (
         <div className="container" style={{ marginBottom: 24 }}>
-          <a href={strip[0].link ? adHref(strip[0].id) : "#"} className="ad" style={{ display: "block" }} target="_blank" rel="noopener sponsored">
-            <img src={strip[0].image} alt={strip[0].title} loading="lazy" />
-            <span className="chip chip--glass ad__label">Publicidade</span>
-          </a>
+          <AdCarousel ads={strip} />
         </div>
       )}
 
@@ -395,6 +395,26 @@ export default async function HomePage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ---------- Logos das empresas (rotativo) ---------- */}
+      {logos.length > 3 && (
+        <section className="section--tight">
+          <div className="container">
+            <div className="ads-head">
+              <small>Empresas do portal</small>
+            </div>
+          </div>
+          <div className="marquee marquee--logos" style={{ ["--marquee-s" as string]: `${logos.length * 3}s` }}>
+            <div className="marquee__track">
+              {[...logos, ...logos].map((m, i) => (
+                <Link key={i} href={`/fornecedores/${m.slug}`} className="marquee__item" title={m.name} tabIndex={i >= logos.length ? -1 : 0} aria-hidden={i >= logos.length || undefined}>
+                  <img src={m.logo ?? ""} alt={m.name} decoding="async" />
+                </Link>
+              ))}
             </div>
           </div>
         </section>

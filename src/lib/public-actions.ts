@@ -6,6 +6,7 @@ import { slugify } from "./format";
 import { sendQuietly } from "./email";
 import { getSettings } from "./settings";
 import { siteUrl } from "./site-url";
+import { whatsappLink } from "./format";
 
 export type PublicFormState = { ok?: boolean; error?: string; message?: string; link?: string; protocol?: string };
 
@@ -32,12 +33,18 @@ async function notifyTeam(subject: string, lines: (string | null | undefined | f
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Nome e WhatsApp são obrigatórios; e-mail é opcional (a equipe responde pelo WhatsApp). */
 function validContact(name: string, email: string, phone: string) {
   if (name.length < 2) return "Informe seu nome.";
-  if (!email && !phone) return "Informe um e-mail ou telefone para retornarmos.";
+  if (phone.replace(/\D/g, "").length < 10) return "Informe seu WhatsApp com DDD.";
   if (email && !EMAIL.test(email)) return "E-mail inválido.";
-  if (phone && phone.replace(/\D/g, "").length < 10) return "Telefone incompleto: inclua o DDD.";
   return null;
+}
+
+/** Link que abre o WhatsApp da Ao Síndico (Textos do site → WhatsApp) com o resumo já escrito. */
+async function teamWhatsapp(lines: (string | null | undefined | false)[]) {
+  const s = await getSettings();
+  return whatsappLink(s.whatsapp, lines.filter(Boolean).join("\n")) ?? undefined;
 }
 
 /** Pedido de orçamento (5 etapas) → Mensagens no painel. */
@@ -53,6 +60,7 @@ export async function submitQuote(_: PublicFormState, form: FormData): Promise<P
   if (!category) return { error: "Escolha o tipo de serviço." };
   if (body.length < 10) return { error: "Descreva o que o condomínio precisa (pelo menos uma frase)." };
   if (!get(form, "city")) return { error: "Informe a cidade do condomínio." };
+  if (get(form, "company").length < 2) return { error: "Informe o nome do condomínio." };
 
   const supplierIds = form.getAll("suppliers").map(String).filter(Boolean).slice(0, 10);
   const valid = supplierIds.length
@@ -69,6 +77,7 @@ export async function submitQuote(_: PublicFormState, form: FormData): Promise<P
       company: get(form, "company", 160) || null,
       condoType: get(form, "condoType", 40) || null,
       units: get(form, "units", 20) || null,
+      towers: get(form, "towers", 20) || null,
       city: get(form, "city", 80) || null,
       state: get(form, "state", 2).toUpperCase() || null,
       neighborhood: get(form, "neighborhood", 80) || null,
@@ -98,10 +107,26 @@ export async function submitQuote(_: PublicFormState, form: FormData): Promise<P
       text: `Olá, ${name.split(" ")[0]}!\n\nRecebemos seu pedido de orçamento para *${category}*. Nossa equipe vai encaminhá-lo às empresas e você será contatado em breve.\n\nProtocolo: #${protocol}\n\nSe precisar complementar alguma informação, é só responder este e-mail.`,
     });
   }
+  const chosen = valid.length
+    ? (await db.supplier.findMany({ where: { id: { in: valid.map((v) => v.id) } }, select: { name: true } })).map((x) => x.name).join(", ")
+    : "";
+  const link = await teamWhatsapp([
+    `*Pedido de orçamento #${protocol}*`,
+    `Serviço: ${category}`,
+    chosen && `Empresas escolhidas: ${chosen}`,
+    get(form, "company") && `Condomínio: ${get(form, "company")}`,
+    [get(form, "condoType"), get(form, "towers") && `${get(form, "towers")} torre(s)`, get(form, "units") && `${get(form, "units")} unidades`].filter(Boolean).join(" · "),
+    [get(form, "neighborhood"), get(form, "city"), get(form, "state").toUpperCase()].filter(Boolean).join(", "),
+    get(form, "urgency") && `Prazo: ${get(form, "urgency")}`,
+    `O que precisa: ${body}`,
+    `Nome: ${name}${get(form, "contactRole") ? ` (${get(form, "contactRole")})` : ""}`,
+    `WhatsApp: ${phone}`,
+  ]);
   return {
     ok: true,
     protocol,
-    message: "Recebemos seu pedido. Nossa equipe vai encaminhar às empresas e você será contatado em breve.",
+    link,
+    message: "Pedido registrado! Toque em “Enviar pelo WhatsApp” para falar direto com a nossa equipe.",
   };
 }
 
@@ -135,7 +160,14 @@ export async function submitContact(_: PublicFormState, form: FormData): Promise
     `Contato: ${[phone, email].filter(Boolean).join(" · ")}`,
     `Abrir no painel: ${siteUrl()}/admin/mensagens`,
   ], email);
-  return { ok: true, message: type === "anunciar" ? "Mensagem recebida! Nossa equipe comercial retorna em até 1 dia útil." : "Mensagem recebida! Retornaremos em até 1 dia útil." };
+  const link = await teamWhatsapp([
+    `*${get(form, "subject") || (type === "anunciar" ? "Quero anunciar" : "Contato pelo site")}*`,
+    `Nome: ${name}${get(form, "company") ? ` · ${get(form, "company")}` : ""}`,
+    `WhatsApp: ${phone}`,
+    get(form, "city") && `Cidade: ${get(form, "city")}`,
+    get(form, "body"),
+  ]);
+  return { ok: true, link, message: "Mensagem registrada! Toque em “Enviar pelo WhatsApp” para falar direto com a nossa equipe." };
 }
 
 export async function subscribe(_: PublicFormState, form: FormData): Promise<PublicFormState> {
@@ -152,9 +184,10 @@ export async function submitQuestion(_: PublicFormState, form: FormData): Promis
   const title = get(form, "title", 200);
   const askerName = get(form, "name", 120);
   const askerEmail = get(form, "email", 160).toLowerCase();
+  const askerPhone = get(form, "phone", 40);
   if (title.length < 10) return { error: "Escreva sua pergunta com um pouco mais de detalhe." };
-  if (askerName.length < 2) return { error: "Informe seu nome." };
-  if (askerEmail && !EMAIL.test(askerEmail)) return { error: "E-mail inválido." };
+  const err = validContact(askerName, askerEmail, askerPhone);
+  if (err) return { error: err };
   let slug = slugify(title) || "pergunta";
   if (await db.question.findUnique({ where: { slug } })) slug = `${slug}-${Date.now().toString(36)}`;
   await db.question.create({
@@ -164,12 +197,21 @@ export async function submitQuestion(_: PublicFormState, form: FormData): Promis
       body: get(form, "body", 3000) || null,
       askerName,
       askerEmail: askerEmail || null,
+      askerPhone,
       askerCity: get(form, "city", 80) || null,
       sectionId: get(form, "sectionId", 40) || null,
     },
   });
   revalidatePath("/admin", "layout");
-  return { ok: true, message: "Pergunta enviada! Nossos especialistas vão responder e ela aparecerá no Tira-Dúvidas." };
+  const link = await teamWhatsapp([
+    "*Tira-Dúvidas*",
+    `Pergunta: ${title}`,
+    get(form, "body"),
+    `Nome: ${askerName}`,
+    `WhatsApp: ${askerPhone}`,
+    get(form, "city") && `Cidade: ${get(form, "city")}`,
+  ]);
+  return { ok: true, link, message: "Pergunta registrada! Toque em “Enviar pelo WhatsApp” para falar direto com a nossa equipe." };
 }
 
 /** Avaliação de fornecedor: entra como pendente. */

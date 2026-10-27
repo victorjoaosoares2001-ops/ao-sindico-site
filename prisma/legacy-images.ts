@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const LEGACY = /https?:\/\/(?:www\.)?aosindico\.com\/storage\/[^\s"')\]<>]+/g;
+const LEGACY = /https?:\/\/(?:www\.|antigo\.)?aosindico\.com\/storage\/[^\s"')\]<>]+/g;
 const HEADERS = { "user-agent": "Mozilla/5.0 (migracao Ao Sindico)" };
 const EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "image/svg+xml": "svg" };
 const TIME_BUDGET_MS = 6 * 60_000;
@@ -35,7 +35,9 @@ type Delegate = {
 };
 
 async function store(url: string): Promise<string | null> {
-  const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(25_000) });
+  // aosindico.com agora aponta para o site novo: os arquivos antigos ficaram em antigo.aosindico.com
+  const from = url.replace(/\/\/(?:www\.)?aosindico\.com\//, "//antigo.aosindico.com/");
+  const res = await fetch(from, { headers: HEADERS, signal: AbortSignal.timeout(25_000) });
   if (!res.ok) return null;
   const type = (res.headers.get("content-type") ?? "").split(";")[0].trim();
   const ext = EXT[type] ?? (url.match(/\.(jpe?g|png|webp|gif|svg)(?:\?|$)/i)?.[1]?.toLowerCase().replace("jpeg", "jpg") || null);

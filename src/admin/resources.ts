@@ -54,7 +54,7 @@ export type ModelName =
   | "event"
   | "partner";
 
-export type ListColumn = { field: string; label: string; kind?: "date" | "bool" | "badge" | "relation" | "relationMany" | "stars" };
+export type ListColumn = { field: string; label: string; kind?: "date" | "bool" | "badge" | "relation" | "relationMany" | "stars" | "whatsapp" };
 
 /** Filtros rápidos (abas) da listagem. */
 export type ListTab = { key: string; label: string; where: Record<string, unknown> };
@@ -406,6 +406,7 @@ export const RESOURCES: ResourceDef[] = [
     ],
     columns: [
       { field: "askerName", label: "Enviada por" },
+      { field: "askerPhone", label: "WhatsApp", kind: "whatsapp" },
       { field: "status", label: "Situação", kind: "badge" },
       { field: "author", label: "Respondida por", kind: "relation" },
       { field: "createdAt", label: "Recebida", kind: "date" },
@@ -417,7 +418,8 @@ export const RESOURCES: ResourceDef[] = [
       { name: "answer", label: "Resposta", type: "markdown", hint: "Escreva a resposta do especialista." },
       { name: "askerName", label: "Nome de quem perguntou", type: "text", required: true, half: true },
       { name: "askerCity", label: "Cidade", type: "text", half: true },
-      { name: "askerEmail", label: "E-mail (não aparece no site)", type: "text" },
+      { name: "askerPhone", label: "WhatsApp de quem perguntou (não aparece no site)", type: "text", half: true, placeholder: "(11) 90000-0000" },
+      { name: "askerEmail", label: "E-mail (não aparece no site)", type: "text", half: true },
       {
         name: "status",
         label: "Situação",

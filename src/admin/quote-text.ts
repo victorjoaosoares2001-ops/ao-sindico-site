@@ -9,7 +9,7 @@ export function buildQuoteText(m: Message, supplierName: string) {
     ``,
     m.category && `*Serviço:* ${m.category}`,
     m.body && `*Descrição:* ${m.body}`,
-    m.company && `*Condomínio:* ${m.company}${m.units ? ` (${m.units} unidades)` : ""}${m.condoType ? ` · ${m.condoType}` : ""}`,
+    m.company && `*Condomínio:* ${m.company}${m.towers ? ` (${m.towers} torre(s)` : m.units ? " (" : ""}${m.units ? `${m.towers ? ", " : ""}${m.units} unidades)` : m.towers ? ")" : ""}${m.condoType ? ` · ${m.condoType}` : ""}`,
     where && `*Local:* ${where}`,
     m.urgency && `*Prazo:* ${m.urgency}`,
     m.budget && `*Orçamento previsto:* ${m.budget}`,

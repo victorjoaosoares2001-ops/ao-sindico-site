@@ -79,7 +79,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: SP 
         <input type="hidden" name="aba" value={aba} />
         <div className="search">
           <Icon name="search" />
-          <input name="q" className="input" placeholder="Buscar por nome, e-mail, condomínio…" defaultValue={q} aria-label="Buscar" />
+          <input name="q" className="input" placeholder="Buscar por nome, WhatsApp, condomínio…" defaultValue={q} aria-label="Buscar" />
         </div>
         <nav className="tabs" aria-label="Tipo">
           <Link href={link({ tipo: undefined })} aria-current={!sp.tipo}>
@@ -107,6 +107,11 @@ export default async function MessagesPage({ searchParams }: { searchParams: SP 
               <span style={{ minWidth: 0 }}>
                 <span className="msg-row__top">
                   <span className="msg-row__name">{m.name}</span>
+                  {m.phone && (
+                    <span className="hint" style={{ color: "#128C7E", fontWeight: 600 }}>
+                      <Icon name="whatsapp" size={12} style={{ display: "inline", verticalAlign: -1 }} /> {m.phone}
+                    </span>
+                  )}
                   <span className="type-chip" data-type={m.type}>
                     {TYPE_LABEL[m.type] ?? m.type}
                   </span>

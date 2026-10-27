@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { AdCarousel } from "@/components/site/AdCarousel";
 import { initials, SupplierCard } from "@/components/site/Cards";
 import { ReviewForm } from "@/components/site/Forms";
 import { QuoteForm } from "@/components/site/QuoteForm";
 import { db } from "@/lib/db";
 import { formatDate, splitList, whatsappLink } from "@/lib/format";
 import { submitReview } from "@/lib/public-actions";
-import { PRO_SLUG, publishedCategories, ratings, supplierCardInclude, supplierCardSelect } from "@/lib/queries";
+import { getSettings } from "@/lib/settings";
+import { activeCampaigns, PRO_SLUG, publishedCategories, ratings, supplierCardInclude, supplierCardSelect } from "@/lib/queries";
 
 type Params = Promise<{ slug: string }>;
 
@@ -27,7 +29,7 @@ export default async function SupplierPage({ params }: { params: Params }) {
   if (!s) notFound();
   const isPro = s.categories.some((c) => c.slug === PRO_SLUG);
 
-  const [categories, related, reviews] = await Promise.all([
+  const [categories, related, reviews, settings, ads] = await Promise.all([
     publishedCategories(),
     db.supplier.findMany({
       where: { published: true, id: { not: s.id }, categories: { some: { slug: { in: s.categories.map((c) => c.slug) } } } },
@@ -36,11 +38,14 @@ export default async function SupplierPage({ params }: { params: Params }) {
       take: 3,
     }),
     db.review.findMany({ where: { supplierId: s.id, status: "aprovada" }, orderBy: { createdAt: "desc" }, take: 20 }),
+    getSettings(),
+    activeCampaigns("lateral", 30),
   ]);
   const rate = await ratings([s.id, ...related.map((r) => r.id)]);
   const mine = rate.get(s.id);
   const services = splitList(s.services);
-  const wa = whatsappLink(s.whatsapp, `Olá! Encontrei a ${s.name} no portal Ao Síndico.`);
+  // A Ao Síndico intermedeia: o site não mostra WhatsApp/telefone/e-mail da empresa (ficam só no painel).
+  const teamWa = whatsappLink(settings.whatsapp, `Olá! Vi a ${s.name} no portal Ao Síndico e gostaria do contato.`);
   const quoteCats = categories.map((c) => ({ name: c.name, icon: c.icon }));
   const firstCat = s.categories.find((c) => c.slug !== PRO_SLUG)?.name;
 
@@ -115,27 +120,6 @@ export default async function SupplierPage({ params }: { params: Params }) {
             <div className="card" data-reveal>
               <h2>Contato</h2>
               <ul className="contact-list">
-                {wa && (
-                  <li>
-                    <a href={wa} target="_blank" rel="noopener">
-                      <Icon name="whatsapp" /> {s.whatsapp}
-                    </a>
-                  </li>
-                )}
-                {s.phone && (
-                  <li>
-                    <a href={`tel:${s.phone.replace(/\D/g, "")}`}>
-                      <Icon name="phone" /> {s.phone}
-                    </a>
-                  </li>
-                )}
-                {s.email && (
-                  <li>
-                    <a href={`mailto:${s.email}`}>
-                      <Icon name="mail" /> {s.email}
-                    </a>
-                  </li>
-                )}
                 {s.website && (
                   <li>
                     <a href={s.website} target="_blank" rel="noopener">
@@ -164,11 +148,17 @@ export default async function SupplierPage({ params }: { params: Params }) {
                     </span>
                   </li>
                 )}
-                {!wa && !s.phone && !s.email && !s.website && (
+                <li>
+                  <span>
+                    <Icon name="inbox" /> O contato com a {s.name} é feito pela equipe Ao Síndico: preencha o pedido ao lado
+                    {teamWa ? " ou fale com a gente no WhatsApp" : ""} e nós fazemos a ponte.
+                  </span>
+                </li>
+                {teamWa && (
                   <li>
-                    <span>
-                      <Icon name="inbox" /> Peça um orçamento ao lado: nossa equipe faz a ponte com a empresa.
-                    </span>
+                    <a href={teamWa} target="_blank" rel="noopener">
+                      <Icon name="whatsapp" /> Falar com a Ao Síndico
+                    </a>
                   </li>
                 )}
               </ul>
@@ -221,6 +211,7 @@ export default async function SupplierPage({ params }: { params: Params }) {
               <QuoteForm
                 tone="light"
                 title={isPro ? "Pedir proposta" : "Pedir orçamento"}
+                subtitle={`Pelo Ao Síndico: nossa equipe recebe o seu pedido e faz a ponte com a ${s.name}.`}
                 categories={isPro ? [{ name: "Síndico Profissional", icon: "users" }, ...quoteCats] : quoteCats}
                 suppliers={[{ id: s.id, name: s.name }]}
                 preselected={[s.id]}
@@ -228,6 +219,9 @@ export default async function SupplierPage({ params }: { params: Params }) {
                 source={`fornecedor:${s.slug}`}
                 compact
               />
+            </div>
+            <div style={{ marginTop: 18 }}>
+              <AdCarousel ads={ads.filter((a) => a.supplierId !== s.id)} />
             </div>
           </aside>
         </div>

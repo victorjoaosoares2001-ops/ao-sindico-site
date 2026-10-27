@@ -6,7 +6,7 @@ import { getResource, OPTION_LABELS, type ListColumn } from "@/admin/resources";
 import { ConfirmButton } from "@/components/admin/Buttons";
 import { Icon } from "@/components/Icon";
 import { requireAdmin } from "@/lib/auth";
-import { formatDate } from "@/lib/format";
+import { formatDate, whatsappLink } from "@/lib/format";
 import { placementLabel } from "@/lib/placements";
 
 type Row = Record<string, unknown> & { id: string };
@@ -26,6 +26,16 @@ function cell(row: Row, col: ListColumn) {
       return OPTION_LABELS[`${col.field}:${raw}`] ?? String(raw);
     case "relation":
       return (raw as { name?: string }).name ?? null;
+    case "whatsapp": {
+      const href = whatsappLink(String(raw));
+      return href ? (
+        <a href={href} target="_blank" rel="noopener" style={{ color: "#128C7E", fontWeight: 600, whiteSpace: "nowrap" }}>
+          {String(raw)}
+        </a>
+      ) : (
+        String(raw)
+      );
+    }
     case "relationMany":
       return (raw as { name: string }[]).map((x) => x.name).join(", ") || null;
     default:

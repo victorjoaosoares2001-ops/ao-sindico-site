@@ -42,11 +42,12 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
   const isQuote = m.type === "orcamento";
   const where = [m.neighborhood, m.city, m.state].filter(Boolean).join(" · ");
   const facts: [string, string | null][] = [
-    ["Telefone", m.phone],
+    ["WhatsApp", m.phone],
     ["E-mail", m.email],
     ["Quem pediu", m.contactRole],
     [isQuote ? "Condomínio" : "Empresa", m.company],
     ["Tipo", m.condoType],
+    ["Torres / blocos", m.towers],
     ["Unidades", m.units],
     ["Local", where || null],
     ["Serviço", m.category],

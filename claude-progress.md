@@ -34,3 +34,11 @@ Banco local: `npm run db:local` (porta 5433) → `npx prisma db push` → `npm r
 
 ## Próximo passo
 Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta desta lista.
+
+## Pedidos da reunião com a Luiza (26/10/2026)
+- Orçamento, Tira-Dúvidas, Anuncie e Contato: **nome + WhatsApp obrigatórios** (e-mail saiu dos formulários). Ao enviar, grava no painel e abre o WhatsApp da Ao Síndico (Textos do site → WhatsApp) com o resumo pronto.
+- Tira-Dúvidas: novo campo `askerPhone`; coluna "WhatsApp" clicável na lista e botão "Responder no WhatsApp" na pergunta.
+- Mensagens: WhatsApp aparece na lista; detalhe mostra "Torres / blocos".
+- Orçamento: avança sozinho ao escolher o serviço; nome do condomínio obrigatório; nº de torres/blocos (`Message.towers`) e nº de apartamentos.
+- Home: removidos os contadores (empresas, síndicos, matérias, eventos) a pedido da cliente.
+- Fornecedores (via painel): Pintura e Fachadas organizada na ordem enviada pela cliente; Innovare escondida.

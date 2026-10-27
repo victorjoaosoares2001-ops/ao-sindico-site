@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { submitQuote, type PublicFormState } from "@/lib/public-actions";
+import { WhatsappDone } from "./Forms";
 
 type Props = {
   categories: { name: string; icon?: string | null }[];
@@ -13,6 +14,7 @@ type Props = {
   tone?: "dark" | "light";
   source?: string;
   title?: string;
+  subtitle?: string;
   compact?: boolean;
 };
 
@@ -22,7 +24,8 @@ const LABELS: Record<string, string> = {
   category: "Serviço",
   company: "Condomínio",
   condoType: "Tipo",
-  units: "Unidades",
+  towers: "Torres / blocos",
+  units: "Apartamentos / unidades",
   city: "Cidade",
   state: "UF",
   neighborhood: "Bairro",
@@ -38,16 +41,16 @@ const LABELS: Record<string, string> = {
 
 const REVIEW_ORDER: [number, string[]][] = [
   [0, ["category"]],
-  [1, ["company", "condoType", "units", "neighborhood", "city", "state"]],
+  [1, ["company", "condoType", "towers", "units", "neighborhood", "city", "state"]],
   [2, ["body", "urgency", "budget"]],
-  [3, ["name", "contactRole", "email", "phone", "preferredTime"]],
+  [3, ["name", "contactRole", "phone", "preferredTime"]],
 ];
 
 /**
  * Pedido de orçamento em 5 etapas. Fica salvo em “Orçamentos e mensagens” no painel,
  * onde a equipe encaminha às empresas e acompanha.
  */
-export function QuoteForm({ categories, suppliers = [], preselected = [], initial = {}, tone = "dark", source, title = "Solicitar orçamento", compact }: Props) {
+export function QuoteForm({ categories, suppliers = [], preselected = [], initial = {}, tone = "dark", source, title = "Solicitar orçamento", subtitle, compact }: Props) {
   const [state, action, pending] = useActionState<PublicFormState, FormData>(submitQuote, {});
   const [step, setStep] = useState(0);
   const [snapshot, setSnapshot] = useState<Record<string, string>>({});
@@ -84,12 +87,7 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
   if (state.ok) {
     return (
       <div className={`quote quote--${tone}`}>
-        <div className="quote__done" role="status">
-          <span className="quote__done-icon">
-            <Icon name="check" size={26} />
-          </span>
-          <h2 style={{ fontSize: 24 }}>Pedido enviado!</h2>
-          <p style={{ opacity: 0.8 }}>{state.message}</p>
+        <WhatsappDone title="Pedido enviado!" message={state.message} link={state.link}>
           {state.protocol && (
             <span className="protocol">
               Protocolo <b>#{state.protocol}</b>
@@ -99,11 +97,8 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
             <Link href="/fornecedores" className={`btn ${tone === "dark" ? "btn--glass" : "btn--ghost"}`}>
               Ver fornecedores
             </Link>
-            <Link href="/tira-duvidas" className={`btn ${tone === "dark" ? "btn--glass" : "btn--ghost"}`}>
-              Tira-Dúvidas
-            </Link>
           </div>
-        </div>
+        </WhatsappDone>
       </div>
     );
   }
@@ -121,7 +116,7 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
       <div className="quote__head">
         <div>
           <h2>{title}</h2>
-          {!compact && <p>Grátis. Nossa equipe encaminha às empresas certas.</p>}
+          {subtitle ? <p>{subtitle}</p> : !compact && <p>Grátis. Nossa equipe encaminha às empresas certas.</p>}
         </div>
       </div>
       <ol className="wizard__progress" aria-label={`Etapa ${step + 1} de ${STEPS.length}: ${STEPS[step]}`}>
@@ -143,7 +138,15 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
             <div className="choice-grid" role="radiogroup" aria-label="Tipo de serviço">
               {[...categories, { name: "Outro", icon: "sparkles" }].map((c, i) => (
                 <label key={c.name} className="choice">
-                  <input type="radio" name="category" value={c.name} required={i === 0} defaultChecked={initial.category === c.name} />
+                  <input
+                    type="radio"
+                    name="category"
+                    value={c.name}
+                    required={i === 0}
+                    defaultChecked={initial.category === c.name}
+                    // avança sozinho ao escolher (a cliente pediu: sem precisar clicar em Continuar)
+                    onChange={() => setTimeout(() => goTo(1), 180)}
+                  />
                   <Icon name={c.icon || "sparkles"} size={18} /> {c.name}
                 </label>
               ))}
@@ -151,7 +154,7 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
           </div>
           {suppliers.length > 0 && (
             <div className="field">
-              <span>Enviar também para estas empresas</span>
+              <span>Empresas de interesse (a Ao Síndico faz o contato)</span>
               <div className="picked">
                 {suppliers.map((s) => (
                   <label key={s.id}>
@@ -169,8 +172,8 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
       <fieldset {...fs(1)}>
         <div className="quote__body">
           <label className="field">
-            <span>Nome do condomínio</span>
-            <input name="company" className="input" placeholder="Condomínio Edifício…" maxLength={160} />
+            <span>Nome do condomínio *</span>
+            <input name="company" className="input" placeholder="Condomínio Edifício…" required minLength={2} maxLength={160} />
           </label>
           <div className="quote__row">
             <label className="field">
@@ -182,8 +185,14 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
                 <option>Associação / loteamento</option>
               </select>
             </label>
+          </div>
+          <div className="quote__row">
             <label className="field">
-              <span>Nº de unidades</span>
+              <span>Nº de torres / blocos</span>
+              <input name="towers" className="input" inputMode="numeric" placeholder="Ex.: 1 torre ou 3 blocos" maxLength={20} />
+            </label>
+            <label className="field">
+              <span>Nº de apartamentos / unidades</span>
               <input name="units" className="input" inputMode="numeric" placeholder="Ex.: 120" maxLength={10} />
             </label>
           </div>
@@ -250,17 +259,14 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
                 <option>Administradora</option>
                 <option>Conselheiro(a)</option>
                 <option>Zelador(a) / gerente predial</option>
+                <option>Funcionário(a) do condomínio</option>
                 <option>Morador(a)</option>
               </select>
             </label>
           </div>
-          <label className="field">
-            <span>E-mail *</span>
-            <input name="email" type="email" className="input" autoComplete="email" required maxLength={160} />
-          </label>
           <div className="quote__row">
             <label className="field">
-              <span>WhatsApp *</span>
+              <span>WhatsApp com DDD *</span>
               <input name="phone" type="tel" className="input" autoComplete="tel" inputMode="tel" placeholder="(11) 90000-0000" required pattern="[\d\s()+\-]{10,}" title="Inclua o DDD" />
             </label>
             <label className="field">
@@ -337,7 +343,7 @@ export function QuoteForm({ categories, suppliers = [], preselected = [], initia
 
       <div className="quote__trust">
         <span>
-          <Icon name="shield" size={14} /> Seus dados vão só para as empresas escolhidas
+          <Icon name="shield" size={14} /> Seus dados ficam com a equipe Ao Síndico
         </span>
         <span>
           <Icon name="check" size={14} /> 100% gratuito

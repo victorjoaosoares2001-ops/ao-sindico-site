@@ -9,7 +9,7 @@ import { History } from "@/components/admin/History";
 import { ResourceForm } from "@/components/admin/ResourceForm";
 import { Icon } from "@/components/Icon";
 import { requireAdmin } from "@/lib/auth";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, whatsappLink } from "@/lib/format";
 
 export async function generateMetadata({ params }: { params: Promise<{ resource: string }> }) {
   const def = getResource((await params).resource);
@@ -33,6 +33,10 @@ export default async function EditResource({
   const { row, values } = loaded;
   const title = String(row[def.titleField] ?? "");
   const publicUrl = def.publicPath?.(row);
+  const askerWa =
+    def.model === "question"
+      ? whatsappLink(row.askerPhone as string | null, `Olá, ${String(row.askerName ?? "").split(" ")[0]}! Aqui é da Ao Síndico, sobre a sua dúvida: "${title}"`)
+      : null;
 
   return (
     <>
@@ -49,6 +53,11 @@ export default async function EditResource({
             <Link href={`/admin/anuncios/novo?supplierId=${id}`} className="btn btn--magenta">
               <Icon name="megaphone" /> Novo anúncio desta empresa
             </Link>
+          )}
+          {askerWa && (
+            <a href={askerWa} target="_blank" rel="noopener" className="btn" style={{ background: "#25D366", color: "#fff" }}>
+              <Icon name="whatsapp" /> Responder no WhatsApp · {String(row.askerName ?? "")}
+            </a>
           )}
           {publicUrl && (
             <a href={publicUrl} target="_blank" rel="noopener" className="btn btn--ghost">

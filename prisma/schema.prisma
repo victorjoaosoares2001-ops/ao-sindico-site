@@ -209,6 +209,7 @@ model Question {
   body        String?
   askerName   String
   askerEmail  String?
+  askerPhone  String? // WhatsApp de quem perguntou (só painel)
   askerCity   String?
   answer      String?
   authorId    String?
@@ -327,6 +328,7 @@ model Message {
   company        String? // condomínio ou empresa
   condoType      String? // residencial | comercial | misto
   units          String?
+  towers         String? // nº de torres/blocos
   city           String?
   state          String?
   neighborhood   String?
