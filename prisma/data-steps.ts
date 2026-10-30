@@ -379,6 +379,41 @@ async function main() {
     return done.length ? `capa: ${done.join(", ")}` : "nenhuma";
   });
 
+  //    Pedido da dona (30/10): TODAS as empresas do site antigo no novo, inclusive as que a equipe
+  //    ocultou ou removeu (13 faltavam). Innovare volta, mas no fim da lista (está em débito com a Ao Síndico).
+  await step("site-antigo-todas-v3", async () => {
+    const items = await json<{ url: string; name: string; logo: string | null; categories: string[]; services: string[]; description: string | null; email?: string; phone?: string }>("fornecedores");
+    const norm = (t: string) => slugify(t).replace(/-/g, "");
+    const all = await db.supplier.findMany();
+    const done: string[] = [];
+    for (const s of items) {
+      const slug = slugify(decodeURIComponent(s.url.split("/fornecedor/")[1] ?? s.name));
+      const logo = s.logo && /\.(jpe?g|png|webp|gif|svg)$/i.test(s.logo) ? s.logo : null;
+      const key = norm(s.name);
+      const found = all.find((x) => x.slug === slug || x.slug === slugify(s.name)) ?? all.find((x) => key.length > 3 && (norm(x.name).startsWith(key) || key.startsWith(norm(x.name))));
+      const last = /innovare/i.test(s.name) ? { order: 9999, featured: false } : {};
+      if (found) {
+        const data = { ...last, ...(found.published ? {} : { published: true }), ...(logo && !found.logo ? { logo } : {}) };
+        if (Object.keys(data).length) {
+          await db.supplier.update({ where: { id: found.id }, data });
+          if (!found.published) done.push(`${found.name} (reexibida)`);
+        }
+        continue;
+      }
+      const cats = await Promise.all(s.categories.map(ensureCategory));
+      const row = await db.supplier.create({
+        data: {
+          name: s.name.replace(/\s+/g, " ").trim(), slug, logo, description: s.description, services: s.services.join(", ") || null,
+          email: s.email ?? null, phone: s.phone ?? null, order: 300 + done.length, ...last,
+          categories: { connect: cats.map((c) => ({ id: c.id })) },
+        },
+      });
+      all.push(row);
+      done.push(`${row.name} (recriada)`);
+    }
+    return done.length ? done.join(", ") : "nada faltando";
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
