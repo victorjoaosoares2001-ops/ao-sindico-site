@@ -414,6 +414,12 @@ async function main() {
     return done.length ? done.join(", ") : "nada faltando";
   });
 
+  //    Innovare tinha plano Premium, que passa na frente da ordem: volta a básico para ficar no fim.
+  await step("innovare-fim-v1", async () => {
+    const r = await db.supplier.updateMany({ where: { name: { contains: "innovare", mode: "insensitive" } }, data: { plan: "basico", featured: false, order: 9999 } });
+    return `${r.count} ajustada`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
