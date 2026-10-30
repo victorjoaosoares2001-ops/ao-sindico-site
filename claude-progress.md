@@ -50,3 +50,9 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 - Modo econômico (aparelhos ≤4 GB) não para mais letreiros/carrosséis.
 - Página da empresa: sem WhatsApp/telefone/e-mail da empresa; contato via Ao Síndico.
 - Pendente com a equipe: logos de Aki Limpe, MVT, Domínio Pinturas, CNN, Mega Engenheiros, MDG, Manutentudo (não existem no antigo); texto da Atlas repetido.
+
+## Pedido da dona (30/10/2026) — publicado
+- Etapa `site-antigo-todas-v3`: as 58 empresas do antigo no novo (13 reexibidas/recriadas). Innovare no fim (`innovare-fim-v1`: plano básico, ordem 9999) por estar em débito.
+- Logos quebrados: a otimização de imagens da Vercel estourou a cota do plano (402). `images.unoptimized: true` em `next.config.ts`.
+- `descricoes-v1`: descrição para as 13 empresas sem texto (só onde estava vazia).
+- Pendente com a equipe: logos de Aki Limpe, Domínio Pinturas, CNN Engenharia, Mega Engenheiros, MDG Engenharia e Manutentudo (não existem no antigo nem dá para confirmar na internet).
