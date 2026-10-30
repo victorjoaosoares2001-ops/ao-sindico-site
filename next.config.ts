@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Otimização da Vercel estourou a cota do plano (402): imagens saem direto do Blob, já leves.
+    unoptimized: true,
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 2_678_400,
     remotePatterns: [

@@ -420,6 +420,35 @@ async function main() {
     return `${r.count} ajustada`;
   });
 
+  //    Empresas sem descrição (o site antigo não tinha texto): resumo a partir dos serviços de cada uma.
+  //    Só preenche descrição vazia — texto escrito pela equipe no painel nunca é trocado.
+  await step("descricoes-v1", async () => {
+    const texts: [RegExp, string][] = [
+      [/^crp/i, "Pintura predial, lavagem e restauração de fachadas, impermeabilização de lajes, rejunte de pastilhas, calhas, rufos e telhados, demarcação de garagem e hidráulica para condomínios."],
+      [/^franklin oliveira/i, "Pintura predial e decorativa, restauração de fachadas, tratamento de trincas, recuperação estrutural, impermeabilização, alvenaria, drywall, gesso e reformas em geral para condomínios."],
+      [/^automatic com/i, "Reformas e retrofit, pintura predial, restauração e rejunte de fachadas, impermeabilização de lajes, laudos técnicos e soluções para reduzir a conta de água do condomínio."],
+      [/^equipe obras/i, "Obras e reformas para condomínios: manutenção predial, reformas de áreas comuns e acompanhamento de obra."],
+      [/^jhs serralheria/i, "Serralheria para condomínios: portões, guarda-corpos, corrimãos, estruturas metálicas, coberturas, esquadrias, calhas e rufos, pintura de escadas e halls e demarcação de garagem."],
+      [/^óticas cantareira/i, "Ótica com condições especiais para síndicos, funcionários e moradores de condomínios parceiros da Ao Síndico."],
+      [/^manutentudo/i, "Instalação e manutenção de gás em condomínios: adequação de tubulação, conversão de gás, teste de estanqueidade (vazamento), vistoria e ligação de fogões, fornos, cooktops e aquecedores."],
+      [/^mvt$/i, "Segurança e portaria para condomínios. Fale com a Ao Síndico para receber uma proposta."],
+      [/^aki limpe/i, "Limpeza e conservação para condomínios: limpeza de áreas comuns, serviços gerais e apoio à manutenção do dia a dia."],
+      [/^domínio pinturas/i, "Pintura predial e de fachadas para condomínios residenciais e comerciais."],
+      [/^cnn engenharia/i, "Engenharia para condomínios: obras e reformas, recuperação e pintura de fachadas."],
+      [/^mega engenheiros/i, "Engenharia para condomínios: obras e reformas, recuperação e pintura de fachadas."],
+      [/^mdg engenharia/i, "Engenharia para condomínios: obras e reformas, recuperação e pintura de fachadas."],
+    ];
+    const list = await db.supplier.findMany({ where: { OR: [{ description: null }, { description: "" }] }, select: { id: true, name: true } });
+    const done: string[] = [];
+    for (const s of list) {
+      const t = texts.find(([re]) => re.test(s.name.trim()))?.[1];
+      if (!t) continue;
+      await db.supplier.update({ where: { id: s.id }, data: { description: t } });
+      done.push(s.name);
+    }
+    return done.join(", ") || "nenhuma";
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
