@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">MDG Engenharia</title>
+  <desc id="desc">Marca tipográfica MDG Engenharia em verde e grafite.</desc>
+  <g transform="translate(62 55)">
+    <path d="M16 286V76l92-54 49 29-38 23-54 31v181H16Z" fill="#1d4632"/>
+    <path d="m139 62 96 56v92l-48 28v-93l-48-28-48 28v93l-48-28v-92l96-56Z" fill="#43a047"/>
+    <path d="M235 118 283 90v168l-96 56-48-28 96-56V118Z" fill="#1d4632"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900">
+    <text x="390" y="220" fill="#263a31" font-size="164" letter-spacing="5">MDG</text>
+    <text x="400" y="305" fill="#43a047" font-size="45" letter-spacing="11">ENGENHARIA</text>
+  </g>
+</svg>

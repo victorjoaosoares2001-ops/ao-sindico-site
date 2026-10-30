@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">CNN Engenharia</title>
+  <desc id="desc">Marca tipográfica CNN Engenharia em azul-marinho e azul-claro.</desc>
+  <g transform="translate(62 55)">
+    <path d="M20 270V95L145 20l125 75v175h-48V122l-77-46-77 46v148H20Z" fill="#12355b"/>
+    <path d="M96 270V155h98v115h-39v-76h-20v76H96Z" fill="#39a7d8"/>
+    <path d="M0 292h290" stroke="#39a7d8" stroke-width="18" stroke-linecap="round"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900">
+    <text x="386" y="222" fill="#12355b" font-size="166" letter-spacing="4">CNN</text>
+    <text x="397" y="307" fill="#2f93c3" font-size="44" letter-spacing="11">ENGENHARIA</text>
+  </g>
+</svg>

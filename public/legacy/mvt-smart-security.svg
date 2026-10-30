@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">MVT Smart Security</title>
+  <desc id="desc">Marca tipográfica MVT Smart Security em azul e ciano.</desc>
+  <g transform="translate(64 54)">
+    <path d="M150 0 286 54v91c0 82-48 139-136 175C62 284 14 227 14 145V54L150 0Z" fill="#0b2545"/>
+    <path d="M150 38 250 78v68c0 59-32 102-100 136-68-34-100-77-100-136V78l100-40Z" fill="#16c1d7"/>
+    <path d="m82 173 42 42 92-101" fill="none" stroke="#fff" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900">
+    <text x="388" y="218" fill="#0b2545" font-size="164" letter-spacing="8">MVT</text>
+    <text x="400" y="300" fill="#16a9bd" font-size="43" letter-spacing="12">SMART SECURITY</text>
+  </g>
+</svg>

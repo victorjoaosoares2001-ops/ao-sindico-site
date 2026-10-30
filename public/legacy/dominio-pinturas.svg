@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Domínio Pinturas</title>
+  <desc id="desc">Marca tipográfica Domínio Pinturas em roxo e magenta.</desc>
+  <g transform="translate(66 50)">
+    <rect x="28" y="25" width="215" height="270" rx="24" fill="#f3e9fb"/>
+    <path d="M63 245V85h39v160H63Zm59 0V55h39v190h-39Zm59 0V109h39v136h-39Z" fill="#5e2b97"/>
+    <path d="M34 263h230" stroke="#d72c8a" stroke-width="28" stroke-linecap="round"/>
+    <path d="m222 40 54 21-65 166-54-21 65-166Z" fill="#d72c8a"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="850">
+    <text x="385" y="198" fill="#39205f" font-size="112">DOMÍNIO</text>
+    <text x="390" y="294" fill="#d72c8a" font-size="82" letter-spacing="12">PINTURAS</text>
+  </g>
+</svg>

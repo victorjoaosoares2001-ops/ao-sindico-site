@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Manutentudo Gás</title>
+  <desc id="desc">Marca da Manutentudo Gás em laranja e vermelho, reconstruída a partir da identidade visual oficial.</desc>
+  <g transform="translate(54 45)">
+    <path fill="#f7941d" d="M158 0c20 76-38 103-11 170 13 32 50 39 67 16 24-31-4-66-20-86 58 31 91 79 91 132 0 77-62 139-139 139S7 309 7 232c0-54 30-104 76-133-9 25-10 49 5 65 19 20 52 10 56-18 5-35-22-65 14-146Z"/>
+    <path fill="#e6292c" d="M150 101c8 47-27 67-11 105 9 21 32 23 43 9 13-17 0-37-9-52 29 22 44 48 44 79 0 42-34 76-76 76s-76-34-76-76c0-31 17-59 44-75-4 15-3 30 6 40 11 12 31 6 33-10 3-24-14-42 2-96Z"/>
+  </g>
+  <g font-family="Arial Black, Arial, sans-serif" font-weight="900" text-transform="uppercase">
+    <text x="380" y="210" fill="#f7941d" font-size="126" letter-spacing="4">MANUTENTUDO</text>
+    <text x="388" y="320" fill="#e6292c" font-size="86" letter-spacing="35">GÁS</text>
+  </g>
+</svg>

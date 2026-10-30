@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Mega Engenheiros</title>
+  <desc id="desc">Marca tipográfica Mega Engenheiros em azul-marinho e laranja.</desc>
+  <g transform="translate(58 54)">
+    <path d="M20 292V48h53l76 103 76-103h53v244h-58V137l-71 94-71-94v155H20Z" fill="#102f4f"/>
+    <path d="M149 12 286 90l-31 52-106-61-106 61-31-52L149 12Z" fill="#f28c28"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900">
+    <text x="390" y="210" fill="#102f4f" font-size="142">MEGA</text>
+    <text x="400" y="302" fill="#f28c28" font-size="48" letter-spacing="10">ENGENHEIROS</text>
+  </g>
+</svg>
