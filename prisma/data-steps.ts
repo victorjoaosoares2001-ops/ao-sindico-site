@@ -449,6 +449,36 @@ async function main() {
     return done.join(", ") || "nenhuma";
   });
 
+  //    Completa a classificação dos fornecedores que chegaram sem categoria no legado e
+  //    restaura a única marca que não tinha arquivo de imagem válido no site antigo.
+  //    `connect` preserva categorias que a equipe eventualmente acrescentou pelo painel.
+  await step("fornecedores-categorias-logo-v1", async () => {
+    const assignments: Array<[string, string[]]> = [
+      ["Concept Security", ["Segurança e Portaria"]],
+      ["ECO SERVICE", ["Infraestrutura", "Segurança e Portaria"]],
+      ["Fortaleza Pinturas", ["Obras e Reformas", "Pintura e Fachadas"]],
+      ["GMP REFORMA PREDIAL", ["Obras e Reformas", "Pintura e Fachadas"]],
+      ["INTEGRADA SERVIÇOS PATRIMONIAIS", ["Serviços Gerais", "Segurança e Portaria"]],
+      ["PREMIUM Serviços", ["Serviços Gerais", "Segurança e Portaria"]],
+      ["CRP", ["Obras e Reformas", "Pintura e Fachadas"]],
+      ["Extinservi", ["Infraestrutura", "Segurança e Portaria"]],
+      ["Teixeira", ["Serviços Gerais"]],
+    ];
+    const done: string[] = [];
+    for (const [name, categoryNames] of assignments) {
+      const supplier = await db.supplier.findFirst({ where: { name: { equals: name, mode: "insensitive" } }, select: { id: true, name: true } });
+      if (!supplier) continue;
+      const categories = await Promise.all(categoryNames.map(ensureCategory));
+      await db.supplier.update({ where: { id: supplier.id }, data: { categories: { connect: categories.map((c) => ({ id: c.id })) } } });
+      done.push(supplier.name);
+    }
+    const logo = await db.supplier.updateMany({
+      where: { name: { contains: "manutentudo", mode: "insensitive" }, logo: null },
+      data: { logo: "/legacy/manutentudo-gas.svg" },
+    });
+    return `${done.length} empresas classificadas, ${logo.count} logo restaurado`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
