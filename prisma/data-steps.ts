@@ -479,6 +479,19 @@ async function main() {
     return `${done.length} empresas classificadas, ${logo.count} logo restaurado`;
   });
 
+  //    Marcas desenhadas (nome estilizado) para as empresas sem logo em lugar nenhum, aprovadas em 30/10.
+  //    Só onde o logo está vazio: quando a equipe subir o logo real pelo painel, ele prevalece.
+  await step("logos-desenhados-v1", async () => {
+    const files: [string, string][] = [
+      ["aki limpe", "aki-limpe"], ["domínio pinturas", "dominio-pinturas"], ["cnn engenharia", "cnn-engenharia"],
+      ["mega engenheiros", "mega-engenheiros"], ["mdg engenharia", "mdg-engenharia"], ["manutentudo", "manutentudo-gas"],
+    ];
+    let n = 0;
+    for (const [name, file] of files)
+      n += (await db.supplier.updateMany({ where: { name: { contains: name, mode: "insensitive" }, logo: null }, data: { logo: `/legacy/${file}.svg` } })).count;
+    return `${n} logos`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
