@@ -70,14 +70,15 @@ export default async function ResourceList({
     ...(q ? { [def.titleField]: { contains: q, mode: "insensitive" } } : {}),
     ...(tab?.where ?? {}),
     ...urlWhere,
+    ...def.scope,
   };
   const page = Math.max(1, Number(sp.pagina) || 1);
   const [rows, total, tabCounts] = await Promise.all([
     delegate(def.model).findMany({ where, orderBy: def.orderBy, include: def.include, take: PER_PAGE, skip: (page - 1) * PER_PAGE }),
     delegate(def.model).count({ where }),
-    Promise.all((def.tabs ?? []).map((t) => delegate(def.model).count({ where: { ...t.where, ...urlWhere } }))),
+    Promise.all((def.tabs ?? []).map((t) => delegate(def.model).count({ where: { ...t.where, ...urlWhere, ...def.scope } }))),
   ]);
-  const all = await delegate(def.model).count({ where: urlWhere });
+  const all = await delegate(def.model).count({ where: { ...urlWhere, ...def.scope } });
   const pages = Math.ceil(total / PER_PAGE);
   const novo = def.gender === "a" ? "Nova" : "Novo";
   const filterQs = new URLSearchParams(urlWhere as Record<string, string>).toString();

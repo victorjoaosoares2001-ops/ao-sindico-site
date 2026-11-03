@@ -29,7 +29,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         { href: "/admin/mensagens", label: "Orçamentos e mensagens", icon: "inbox", badge: unread, module: "mensagens" },
       ],
     },
-    { title: "Comercial", items: [res("fornecedores"), res("anuncios"), res("parceiros"), res("avaliacoes", pendingReviews)] },
+    { title: "Comercial", items: [res("fornecedores"), res("sindicos"), res("anuncios"), res("parceiros"), res("avaliacoes", pendingReviews)] },
     { title: "Conteúdo", items: [res("materias"), res("tira-duvidas", pendingQuestions), res("videos"), res("autores")] },
     { title: "Agenda", items: [res("eventos"), res("cursos")] },
     {

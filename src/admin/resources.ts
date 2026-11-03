@@ -2,6 +2,9 @@ import type { IconName } from "@/components/Icon";
 import type { Module } from "@/lib/permissions";
 import { PLACEMENTS } from "@/lib/placements";
 
+// mesmo valor de PRO_SLUG em lib/queries (que não dá para importar aqui: puxa o banco)
+const PRO_SLUG = "sindico-profissional";
+
 /**
  * Cadastros do painel. Cada recurso descreve seus campos em português;
  * listagem, formulário e gravação são gerados a partir daqui.
@@ -77,6 +80,8 @@ export type ResourceDef = {
   tabs?: ListTab[];
   /** filtros aceitos pela URL (?campo=valor), ex.: anúncios de uma empresa */
   urlFilters?: string[];
+  /** filtro fixo da seção (mesmo modelo dividido em duas listas no painel) */
+  scope?: Record<string, unknown>;
   orderBy: Record<string, "asc" | "desc">[];
   include?: Record<string, unknown>;
   publicPath?: (item: Record<string, unknown>) => string | null;
@@ -133,8 +138,9 @@ export const RESOURCES: ResourceDef[] = [
     plural: "Fornecedores",
     gender: "o",
     icon: "building",
-    description: "Empresas e síndicos profissionais do guia. Na página de cada empresa você cria os anúncios dela.",
+    description: "Empresas do guia. Na página de cada empresa você cria os anúncios dela. Síndicos profissionais ficam na seção própria.",
     titleField: "name",
+    scope: { categories: { none: { slug: PRO_SLUG } } },
     slugFrom: "name",
     imageField: "logo",
     publishField: "published",
@@ -597,6 +603,17 @@ export const RESOURCES: ResourceDef[] = [
     fields: [{ name: "name", label: "Nome", type: "text", required: true }, order, slug],
   },
 ];
+
+// Síndicos profissionais: mesmo cadastro das empresas, em lista separada (pedido da cliente, 03/11).
+RESOURCES.splice(1, 0, {
+  ...RESOURCES[0],
+  key: "sindicos",
+  singular: "síndico profissional",
+  plural: "Síndicos profissionais",
+  icon: "users",
+  description: "Síndicos profissionais do guia. Aparecem na página Síndicos profissionais do site.",
+  scope: { categories: { some: { slug: PRO_SLUG } } },
+});
 
 export function getResource(key: string) {
   return RESOURCES.find((r) => r.key === key) ?? null;

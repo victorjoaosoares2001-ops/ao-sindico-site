@@ -32,6 +32,10 @@ export default async function NewResource({
   const values: Record<string, unknown> = {};
   for (const f of def.urlFilters ?? []) if (sp[f]) values[f] = sp[f];
   if (def.fields.some((f) => f.name === "publishedAt")) values.publishedAt = toInputDate(new Date(), true);
+  if (def.key === "sindicos") {
+    const pro = await db.category.findUnique({ where: { slug: "sindico-profissional" }, select: { id: true } });
+    if (pro) values.categories = [pro.id];
+  }
   let back: string | undefined;
   let context: string | null = null;
   if (def.model === "campaign" && sp.supplierId) {
