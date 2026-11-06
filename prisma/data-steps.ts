@@ -563,6 +563,11 @@ async function main() {
     return `${n} capas`;
   });
 
+  await step("capa-8-encontro-leve-v1", async () => {
+    const r = await db.event.updateMany({ where: { cover: "/legacy/eventos/8-encontro-guarulhos.png" }, data: { cover: "/legacy/eventos/8-encontro-guarulhos.jpg" } });
+    return `${r.count} capa`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
