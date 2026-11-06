@@ -67,7 +67,7 @@ export default async function ResourceList({
   const tab = def.tabs?.find((t) => t.key === sp.aba);
   const urlWhere = Object.fromEntries((def.urlFilters ?? []).filter((f) => sp[f]).map((f) => [f, sp[f]]));
   const where = {
-    ...(q ? { [def.titleField]: { contains: q, mode: "insensitive" } } : {}),
+    ...(q ? { OR: (def.searchFields ?? [def.titleField]).map((f) => ({ [f]: { contains: q, mode: "insensitive" } })) } : {}),
     ...(tab?.where ?? {}),
     ...urlWhere,
     ...def.scope,
@@ -201,7 +201,7 @@ export default async function ResourceList({
       </section>
       {pages > 1 && (
         <nav className="tabs" style={{ margin: "18px auto 0", width: "fit-content", maxWidth: "100%" }} aria-label="Páginas">
-          {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
+          {Array.from({ length: pages }, (_, i) => i + 1).filter((n) => n === 1 || n === pages || Math.abs(n - page) <= 3).map((n) => (
             <Link key={n} href={link({ pagina: String(n) })} aria-current={n === page}>
               {n}
             </Link>

@@ -275,6 +275,7 @@ model Event {
   published        Boolean             @default(true)
   sponsors         Partner[]           @relation("EventSponsors")
   registrations    EventRegistration[]
+  sponsorships     Sponsorship[]
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 }
@@ -296,6 +297,49 @@ model EventRegistration {
   createdAt DateTime @default(now())
 
   @@index([eventId, email])
+  @@index([legacyId])
+}
+
+// Patrocínio de evento (painel antigo: Comercial > Patrocinadores)
+model Sponsorship {
+  id        String   @id @default(cuid())
+  company   String
+  segment   String?
+  logo      String?
+  contact   String?
+  email     String?
+  phone     String?
+  value     String?
+  status    String   @default("negociando") // cancelado | confirmado | negociando | a-receber
+  eventId   String?
+  event     Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  staff     String? // equipe do patrocinador no evento, uma pessoa por linha
+  legacyId  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([legacyId])
+}
+
+// Cadastro comercial de condomínios (painel antigo: Comercial > Condomínios)
+model Condominium {
+  id        String   @id @default(cuid())
+  name      String
+  operator  String?
+  quotes    Int      @default(0) // orçamentos no painel antigo
+  email     String?
+  phone     String?
+  zipcode   String?
+  address   String?
+  number    String?
+  district  String?
+  city      String?
+  state     String?
+  legacyId  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
   @@index([legacyId])
 }
 

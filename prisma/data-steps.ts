@@ -7,11 +7,12 @@
 import { PrismaClient } from "@prisma/client";
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { readFile } from "node:fs/promises";
 import { ARTICLES, CAMPAIGNS, CATEGORIES, EVENTS, SECTIONS, SUPPLIERS } from "./seed-content";
 import { cleanMigratedText, excerptFrom } from "./text-fix";
 import { migrateLegacyImages as migrateImagesWith } from "./legacy-images";
-import { importLegacyRegistrations } from "./legacy-registrations";
+import { importLegacyCondos, importLegacyRegistrations, importLegacySponsors } from "./legacy-registrations";
 import { siteUrl } from "../src/lib/site-url";
 
 const db = new PrismaClient();
@@ -600,8 +601,10 @@ async function main() {
   });
 
   //    Só roda na publicação pontual que leva o arquivo (ele nunca vai para o git).
-  const legacyRegs = new URL("./privado/inscricoes-antigas.json", import.meta.url);
-  if (existsSync(legacyRegs)) await importLegacyRegistrations(db, legacyRegs.pathname.replace(/^\/(?=[A-Za-z]:)/, ""));
+  const priv = (f: string) => fileURLToPath(new URL(`./privado/${f}.json`, import.meta.url));
+  if (existsSync(priv("inscricoes-antigas"))) await importLegacyRegistrations(db, priv("inscricoes-antigas"));
+  if (existsSync(priv("patrocinadores-antigos"))) await importLegacySponsors(db, priv("patrocinadores-antigos"));
+  if (existsSync(priv("condominios-antigos"))) await importLegacyCondos(db, priv("condominios-antigos"));
 
   await migrateLegacyImages();
 

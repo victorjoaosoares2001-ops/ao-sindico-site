@@ -55,7 +55,9 @@ export type ModelName =
   | "review"
   | "course"
   | "event"
-  | "partner";
+  | "partner"
+  | "sponsorship"
+  | "condominium";
 
 export type ListColumn = { field: string; label: string; kind?: "date" | "bool" | "badge" | "relation" | "relationMany" | "stars" | "whatsapp" };
 
@@ -82,6 +84,8 @@ export type ResourceDef = {
   urlFilters?: string[];
   /** filtro fixo da seção (mesmo modelo dividido em duas listas no painel) */
   scope?: Record<string, unknown>;
+  /** campos da busca da lista (padrão: só o título) */
+  searchFields?: string[];
   orderBy: Record<string, "asc" | "desc">[];
   include?: Record<string, unknown>;
   publicPath?: (item: Record<string, unknown>) => string | null;
@@ -603,6 +607,96 @@ export const RESOURCES: ResourceDef[] = [
     fields: [{ name: "name", label: "Nome", type: "text", required: true }, order, slug],
   },
 ];
+
+// Vindos do painel antigo (Comercial): patrocínios por evento e cadastro de condomínios.
+RESOURCES.push(
+  {
+    key: "patrocinadores",
+    model: "sponsorship",
+    module: "comercial",
+    singular: "patrocinador",
+    plural: "Patrocinadores",
+    gender: "o",
+    icon: "handshake",
+    description: "Patrocínio de cada evento: contato, valor, situação e equipe da empresa no dia.",
+    titleField: "company",
+    imageField: "logo",
+    searchFields: ["company", "contact", "email", "segment"],
+    orderBy: [{ createdAt: "desc" }, { company: "asc" }],
+    include: { event: { select: { title: true } } },
+    tabs: [
+      { key: "negociando", label: "Negociando", where: { status: "negociando" } },
+      { key: "confirmado", label: "Confirmado", where: { status: "confirmado" } },
+      { key: "a-receber", label: "A receber", where: { status: "a-receber" } },
+      { key: "cancelado", label: "Cancelado", where: { status: "cancelado" } },
+    ],
+    columns: [
+      { field: "event.title", label: "Evento" },
+      { field: "contact", label: "Contato" },
+      { field: "phone", label: "Telefone" },
+      { field: "value", label: "Valor" },
+      { field: "status", label: "Situação", kind: "badge" },
+    ],
+    fields: [
+      { name: "company", label: "Empresa", type: "text", required: true },
+      { name: "eventId", label: "Evento", type: "relation", relation: { model: "event", label: "title" } },
+      { name: "segment", label: "Segmento", type: "text", half: true },
+      { name: "value", label: "Valor", type: "text", half: true },
+      { name: "contact", label: "Contato", type: "text" },
+      { name: "email", label: "E-mail", type: "text", half: true },
+      { name: "phone", label: "Telefone", type: "text", half: true },
+      { name: "staff", label: "Equipe no evento", type: "textarea", hint: "Uma pessoa por linha: nome, e-mail, telefone." },
+      { name: "logo", label: "Logo", type: "image", side: true },
+      {
+        name: "status",
+        label: "Situação",
+        type: "select",
+        side: true,
+        defaultValue: "negociando",
+        options: [
+          { value: "negociando", label: "Negociando" },
+          { value: "confirmado", label: "Confirmado" },
+          { value: "a-receber", label: "A receber" },
+          { value: "cancelado", label: "Cancelado" },
+        ],
+      },
+    ],
+  },
+  {
+    key: "condominios",
+    model: "condominium",
+    module: "comercial",
+    singular: "condomínio",
+    plural: "Condomínios",
+    gender: "o",
+    icon: "building",
+    description: "Cadastro comercial de condomínios, com operador(a) responsável, contato e endereço.",
+    titleField: "name",
+    searchFields: ["name", "email", "phone", "city", "operator", "district"],
+    orderBy: [{ name: "asc" }],
+    columns: [
+      { field: "operator", label: "Operador(a)" },
+      { field: "quotes", label: "Orçamentos" },
+      { field: "city", label: "Cidade" },
+      { field: "state", label: "UF" },
+      { field: "email", label: "E-mail" },
+      { field: "phone", label: "Telefone" },
+    ],
+    fields: [
+      { name: "name", label: "Nome do condomínio", type: "text", required: true },
+      { name: "operator", label: "Operador(a)", type: "text", half: true },
+      { name: "quotes", label: "Orçamentos", type: "number", half: true, defaultValue: 0 },
+      { name: "email", label: "E-mail", type: "text", half: true },
+      { name: "phone", label: "Telefone", type: "text", half: true },
+      { name: "zipcode", label: "CEP", type: "text", half: true },
+      { name: "address", label: "Endereço", type: "text", half: true },
+      { name: "number", label: "Número", type: "text", half: true },
+      { name: "district", label: "Bairro", type: "text", half: true },
+      { name: "city", label: "Cidade", type: "text", half: true },
+      { name: "state", label: "UF", type: "text", half: true },
+    ],
+  },
+);
 
 // Síndicos profissionais: mesmo cadastro das empresas, em lista separada (pedido da cliente, 03/11).
 RESOURCES.splice(1, 0, {

@@ -70,3 +70,7 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 - Painel antigo: sistema.aosindico.com/manager-setup. Mari/Luiza imprimem etiquetas por ele. Nova tela `/admin/inscricoes` copia a de lá: busca, evento, tipo, total, adicionar, editar, excluir, exportar, gerar etiqueta (uma ou o evento todo) com contador. Etiqueta 90×29 mm em HTML para imprimir; o QR é fixo (`public/legacy/etiqueta-qr.png`, vCard da Luiza), igual ao do PDF antigo.
 - Removido o único (evento+e-mail): o antigo tem 413 repetidos. O site continua sem deixar repetir no formulário público.
 - `prisma/legacy-registrations.ts`: importa de `prisma/privado/inscricoes-antigas.json`, fora do git (repo é público: nunca versionar dados de inscritos); roda no build porque o DATABASE_URL é sensível na Vercel. Refazível pelo `legacyId`.
+
+## Patrocinadores e Condomínios do painel antigo (06/11/2026)
+- Models `Sponsorship` e `Condominium`, seções no menu Comercial (cadastro genérico de `resources.ts`). Importados por `prisma/legacy-registrations.ts` a partir de `prisma/privado/` (fora do git), no build.
+- Logos dos patrocinadores não vieram: o painel antigo só guarda o nome do arquivo, sem caminho público.
