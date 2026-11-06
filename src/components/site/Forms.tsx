@@ -255,7 +255,7 @@ export function ReviewForm({ action: bound }: { action: (s: PublicFormState, f: 
 
 export function RegistrationForm({ action: bound, eventTitle }: { action: (s: PublicFormState, f: FormData) => Promise<PublicFormState>; eventTitle: string }) {
   const [state, action, pending] = useActionState<PublicFormState, FormData>(bound, {});
-  if (state.ok) return <Done title="Inscrição confirmada!" message={state.message} />;
+  if (state.ok) return <Done title={state.message?.startsWith("Este e-mail já") ? "Você já está inscrito(a)" : "Inscrição confirmada!"} message={state.message} />;
   return (
     <form action={action} className="form-grid" aria-label={`Inscrição: ${eventTitle}`}>
       <Guard />

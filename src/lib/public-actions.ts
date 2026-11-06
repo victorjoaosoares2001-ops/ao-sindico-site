@@ -246,7 +246,7 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
   if (err) return { error: err };
   if (!email) return { error: "Informe seu e-mail: ele é usado para o certificado." };
   const exists = await db.eventRegistration.findUnique({ where: { eventId_email: { eventId, email } } });
-  if (exists) return { ok: true, message: "Você já estava inscrito(a) neste evento. Até lá!" };
+  if (exists) return { ok: true, message: "Este e-mail já estava inscrito neste evento, por isso não entrou uma inscrição nova. Para inscrever outra pessoa, use outro e-mail." };
   await db.eventRegistration.create({
     data: {
       eventId,
