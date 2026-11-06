@@ -13,3 +13,4 @@ uploads/*
 .pgdata
 CONVITE-*.txt
 deploy-*.log
+prisma/privado/

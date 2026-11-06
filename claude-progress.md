@@ -69,4 +69,4 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 ## Inscrições do painel antigo (06/11/2026)
 - Painel antigo: sistema.aosindico.com/manager-setup. Mari/Luiza imprimem etiquetas por ele. Nova tela `/admin/inscricoes` copia a de lá: busca, evento, tipo, total, adicionar, editar, excluir, exportar, gerar etiqueta (uma ou o evento todo) com contador. Etiqueta 90×29 mm em HTML para imprimir; o QR é fixo (`public/legacy/etiqueta-qr.png`, vCard da Luiza), igual ao do PDF antigo.
 - Removido o único (evento+e-mail): o antigo tem 413 repetidos. O site continua sem deixar repetir no formulário público.
-- `scripts/importar-inscricoes-antigas.mts`: importa de JSON fora do repositório (repo é público: nunca versionar dados de inscritos). Refazível pelo `legacyId`.
+- `prisma/legacy-registrations.ts`: importa de `prisma/privado/inscricoes-antigas.json`, fora do git (repo é público: nunca versionar dados de inscritos); roda no build porque o DATABASE_URL é sensível na Vercel. Refazível pelo `legacyId`.
