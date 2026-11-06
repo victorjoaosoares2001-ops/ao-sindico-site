@@ -13,6 +13,21 @@
     #f4f3ef;
 }
 
+/* Total de registros das listas: precisa saltar aos olhos */
+.adm-total {
+  margin: 0 0 12px;
+  color: #c81e1e;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.adm-total strong {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- Menu lateral ---------- */
 
 .adm-side {

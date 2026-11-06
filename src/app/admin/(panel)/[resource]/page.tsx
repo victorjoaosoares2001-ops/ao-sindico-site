@@ -139,6 +139,10 @@ export default async function ResourceList({
         </nav>
       )}
 
+      <p className="adm-total">
+        <strong>{total.toLocaleString("pt-BR")}</strong> {total === 1 ? "registro" : "registros"}
+      </p>
+
       <section className="panel rows">
         {rows.length === 0 ? (
           <div className="adm-empty">

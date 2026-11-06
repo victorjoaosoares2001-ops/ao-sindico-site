@@ -74,8 +74,8 @@ export default async function RegistrationsPage({ searchParams }: { searchParams
           <Icon name="search" /> Buscar
         </button>
       </form>
-      <p className="hint" style={{ margin: "0 0 10px" }}>
-        Total de <strong>{total.toLocaleString("pt-BR")}</strong> registros.
+      <p className="adm-total">
+        <strong>{total.toLocaleString("pt-BR")}</strong> {total === 1 ? "registro" : "registros"}
       </p>
 
       <section className="panel rows">
