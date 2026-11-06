@@ -1455,7 +1455,7 @@
 
 .agenda {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
   grid-gap: 18px;
   gap: 18px;
 }
@@ -2621,7 +2621,7 @@
 /* Vídeos */
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   grid-gap: 22px;
   gap: 22px;
 }
@@ -2638,6 +2638,7 @@
   border-radius: var(--r-lg);
   overflow: hidden;
   background: var(--graphite);
+  box-shadow: var(--shadow-md);
 }
 
 .video-card__frame img,

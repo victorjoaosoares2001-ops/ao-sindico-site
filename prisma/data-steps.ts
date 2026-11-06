@@ -492,6 +492,60 @@ async function main() {
     return `${n} logos`;
   });
 
+  //    Pedido da Luiza (06/11): eventos passados e vídeos do site antigo. Datas e locais vêm das páginas
+  //    antigas (antigo.aosindico.com/eventos/*, eventos.aosindico.com/*); só cria o que ainda não existe.
+  await step("site-antigo-eventos-videos-v1", async () => {
+    const OLD = "https://antigo.aosindico.com/storage";
+    const SP = "São Paulo · SP", GRU = "Guarulhos · SP";
+    const GUARULHOS = { venue: "Hotel Slaviero Guarulhos Aeroporto", address: "Rua Rafael Balzani, 32 - Vila Moreira", city: GRU };
+    const DAN_INN = { venue: "Hotel Dan Inn Planalto", address: "Avenida Cásper Líbero, 115 - Centro", city: SP };
+    const article = (slug: string) => `[Leia como foi](/informe-se/${slug})`;
+    const events = [
+      { title: "16º Congresso de Síndicos em São Paulo", date: "2026-09-12", cover: null, ...DAN_INN, excerpt: "Congresso gratuito para síndicos, com palestras, networking e fornecedores do mercado condominial.", description: null },
+      { title: "7º Encontro de Síndicos de Guarulhos e Região", date: "2025-11-08", cover: `${OLD}/events/01095990017551904787-encontro-de-sindicos-de-guarulhos-e-regiao.jpg`, ...GUARULHOS, excerpt: "Evento gratuito para síndicos e gestores condominiais, com palestras de especialistas, networking e coffee break.", description: null },
+      { title: "6º Congresso de Síndicos em Guarulhos", date: "2024-10-05", cover: `${OLD}/posts/whatsapp-image-2024-10-25-at-094604jpeg_095832.jpg`, venue: null, address: null, city: GRU, excerpt: "Um dia de palestras com especialistas sobre inovação, segurança e sustentabilidade na gestão de condomínios.", description: article("ocorreu-o-6o-congresso-de-sindicos-em-guarulhos-ao-sindico") },
+      { title: "3º Encontro de Zeladores e Gerente Predial", date: "2024-05-18", cover: `${OLD}/events/3-encontro-de-zeladores_094340.png`, ...DAN_INN, excerpt: "Encontro gratuito com palestras, workshops práticos e networking para zeladores e gerentes prediais.", description: article("3o-encontro-de-zeladores-e-gerente-predial") },
+      { title: "14º Congresso de Síndicos em São Paulo", date: "2023-12-09", cover: `${OLD}/events/capa_131753.jpg`, venue: "Hotel Slaviero Downtown São Paulo", address: "Rua Araújo, 141 - República", city: SP, excerpt: "Síndicos, especialistas e fornecedores reunidos para troca de conhecimento, networking e soluções práticas.", description: article("14congresso-de-sindicos-sao-paulo") },
+      { title: "5º Encontro de Síndicos de Guarulhos", date: "2023-09-30", cover: `${OLD}/events/capa_122219.jpg`, ...GUARULHOS, excerpt: "Palestras, negócios e networking entre síndicos e fornecedores de Guarulhos e região.", description: article("5o-encontro-de-sindicos-guarulhossp") },
+      { title: "2º Encontro de Zeladores e Gerente Predial", date: "2023-07-08", cover: `${OLD}/events/capa-2-encontro-zeladores_113810.jpg`, venue: "Gran Villagio Hotel", address: "Rua Martins Fontes, 330 - Centro", city: SP, excerpt: "Um dia de aprendizado, troca de experiências e networking para zeladores e gerentes prediais.", description: article("2-encontro-de-zeladores-e-gerentes-prediais-de-sao-paulo-e-regioes") },
+      { title: "4º Encontro de Síndicos em Guarulhos", date: "2022-08-27", cover: null, venue: "Hotel Slaviero Essential", address: "Rua Rafael Balzani, 32 - Centro", city: GRU, excerpt: "Encontro gratuito com palestras para síndicos, incluindo simulação de mediação de conflitos em condomínios.", description: null },
+    ];
+    let newEvents = 0;
+    for (const { date, ...e } of events) {
+      const slug = slugify(e.title);
+      if (await db.event.findFirst({ where: { OR: [{ slug }, { title: e.title }] } })) continue;
+      await db.event.create({ data: { ...e, slug, startsAt: new Date(`${date}T00:00:00-03:00`), registrationOpen: false } });
+      newEvents++;
+    }
+    // 8º Encontro (o próximo): só recebe a capa do antigo se ainda não tiver imagem
+    await db.event.updateMany({ where: { slug: "8-encontro-de-sindicos-de-guarulhos-e-regiao", cover: null }, data: { cover: `${OLD}/events/oitavo-encontro-de-sindicos-em-guarulhos_112623.png` } });
+
+    // Os 8 primeiros estão na home do antigo; os demais, no canal do YouTube (datas do canal).
+    const videos: [string, string, string][] = [
+      ["Fln7e6ATZ-I", "13º Congresso do Portal Ao Síndico", "2022-12-13"],
+      ["Rv3HAMQ0C7A", "4º Encontro de Síndicos em Guarulhos", "2022-10-06"],
+      ["oKcSSesUgG8", "10º Congresso do Portal Ao Síndico", "2019-12-11"],
+      ["yBKJLKiZU1A", "3º Encontro de Síndicos em Guarulhos", "2019-09-11"],
+      ["RhGu9YJeDzk", "4º Encontro do Portal Ao Síndico", "2019-07-30"],
+      ["8BGVQXoO0Gc", "5º Encontro do Portal Ao Síndico", "2019-07-30"],
+      ["WJ2bkEblpGg", "Fim do telemarketing? Anatel cria site para bloqueio de ligações", "2019-07-16"],
+      ["89EzW86SF9E", "2º Encontro ABC no Hotel Plaza Mayor", "2019-05-21"],
+      ["bfPPcBoZ-7E", "2º Encontro em Guarulhos", "2018-08-15"],
+      ["wTe4E3wO4us", "8º Congresso São Paulo", "2018-03-20"],
+      ["SzvUaSXT8nY", "1º Curso de Síndico Profissional", "2015-05-18"],
+      ["PLmkXfrXJvs", "Chamada do 6º Encontro Ao Síndico", "2015-04-28"],
+      ["tG5_PnUqYkw", "5º Encontro Ao Síndico (2015)", "2015-03-18"],
+      ["3PtS8I4pKhw", "4º Encontro Ao Síndico (2015)", "2015-03-18"],
+    ];
+    let newVideos = 0;
+    for (const [id, title, date] of videos) {
+      if (await db.video.findFirst({ where: { url: { contains: id } } })) continue;
+      await db.video.create({ data: { title, slug: slugify(title), url: `https://www.youtube.com/watch?v=${id}`, publishedAt: new Date(`${date}T12:00:00-03:00`) } });
+      newVideos++;
+    }
+    return `${newEvents} eventos, ${newVideos} vídeos`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.

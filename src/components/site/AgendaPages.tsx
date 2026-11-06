@@ -9,7 +9,7 @@ import { findCertificate, registerForEvent } from "@/lib/public-actions";
 
 const MODE: Record<string, string> = { online: "Online", presencial: "Presencial", hibrido: "Híbrido" };
 
-export function AgendaList({ kind, upcoming, past }: { kind: "evento" | "curso"; upcoming: (Event | Course)[]; past: (Event | Course)[] }) {
+export function AgendaList({ kind, upcoming, past, children }: { kind: "evento" | "curso"; upcoming: (Event | Course)[]; past: (Event | Course)[]; children?: React.ReactNode }) {
   const isEvent = kind === "evento";
   return (
     <>
@@ -57,6 +57,7 @@ export function AgendaList({ kind, upcoming, past }: { kind: "evento" | "curso";
               </div>
             </>
           )}
+          {children}
         </div>
       </section>
     </>

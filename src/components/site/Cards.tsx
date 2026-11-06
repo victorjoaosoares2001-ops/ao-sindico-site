@@ -115,6 +115,7 @@ export function AgendaCard({ item, kind, delay = 0 }: { item: Event | Course; ki
       <div>
         <div className="meta">
           <b style={{ color: kind === "curso" ? "var(--teal-deep)" : undefined }}>{kind === "curso" ? "Curso" : "Evento"}</b>
+          {item.startsAt && item.startsAt < new Date() && <span>{item.startsAt.getFullYear()}</span>}
           {where && <span>{where}</span>}
         </div>
         <h3>{item.title}</h3>

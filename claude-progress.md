@@ -60,3 +60,8 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 ## Inscrições em eventos (06/11/2026) — publicado
 - Reclamação da Mari: painel antigo parado desde 15/10. Causa: o domínio passou para o site novo; as inscrições vão para o banco novo (16 entre 19/10 e 06/11, nenhuma perdida). As anteriores seguem em antigo.aosindico.com/panel; o formulário de antigo.aosindico.com ainda grava lá.
 - Nova tela `/admin/inscricoes` no menu Dia a dia, com data, busca e planilha. Aviso por e-mail à equipe a cada inscrição (só sai com Resend configurado).
+
+## Eventos e vídeos do site antigo (06/11/2026) — publicado
+- Etapa `site-antigo-eventos-videos-v1`: 8 eventos passados (páginas de antigo.aosindico.com/eventos/*, fora da lista do antigo, e mini-sites eventos.aosindico.com/saopaulo e /guarulhos) e 14 vídeos (8 da home do antigo + 6 de eventos do canal; sem o sorteio).
+- /eventos mostra o ano nas edições anteriores e os 3 últimos vídeos. Vídeos com sombra `--shadow-md`.
+- Não importados por falta de data exata: 13º/10º/8º Congresso, 3º/2º Encontro Guarulhos etc. (estão só em Vídeos). Galeria de fotos do 5º Encontro (35 fotos) não veio: não há campo para galeria.
