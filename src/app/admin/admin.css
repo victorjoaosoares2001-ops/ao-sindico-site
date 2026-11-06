@@ -71,13 +71,52 @@
   gap: 2px;
 }
 
-.adm-nav__title {
-  margin: 18px 10px 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+.adm-nav__group button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.adm-nav__group button:hover,
+.adm-nav__group[data-open="true"] button {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.adm-nav__arrow {
+  margin-left: auto;
+  flex: none;
+  opacity: 0.6;
+  transition: transform 0.2s;
+}
+
+.adm-badge + .adm-nav__arrow {
+  margin-left: 0;
+}
+
+.adm-nav__group[data-open="true"] .adm-nav__arrow {
+  transform: rotate(90deg);
+}
+
+.adm-nav__items {
+  display: grid;
+  gap: 2px;
+  margin-top: 2px;
+  padding-left: 12px;
 }
 
 .adm-nav a {

@@ -9,6 +9,9 @@ import { Logo } from "@/components/Logo";
 
 type Item = { href: string; label: string; icon: IconName; badge?: number };
 
+/** Grupos que abrem e fecham com a setinha; os que não estão aqui ficam sempre abertos. */
+const GROUP_ICONS: Record<string, IconName> = { Comercial: "briefcase", "Conteúdo": "newspaper", Agenda: "calendar", "Configurações": "settings" };
+
 export function AdminShell({
   user,
   groups,
@@ -20,9 +23,14 @@ export function AdminShell({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  useEffect(() => setOpen(false), [pathname]);
-
   const active = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(href + "/"));
+  const currentGroup = groups.find((g) => GROUP_ICONS[g.title] && g.items.some((it) => active(it.href)))?.title ?? null;
+  const [expanded, setExpanded] = useState(currentGroup);
+  useEffect(() => {
+    setOpen(false);
+    if (currentGroup) setExpanded(currentGroup); // ao navegar, abre o grupo da página atual
+  }, [pathname, currentGroup]);
+
   const initials = user.name
     .split(" ")
     .slice(0, 2)
@@ -38,18 +46,36 @@ export function AdminShell({
           <small>Painel da equipe</small>
         </div>
         <nav className="adm-nav">
-          {groups.map((g) => (
-            <div key={g.title} style={{ display: "contents" }}>
-              <div className="adm-nav__title">{g.title}</div>
-              {g.items.map((it) => (
-                <Link key={it.href} href={it.href} aria-current={active(it.href) ? "page" : undefined}>
-                  <Icon name={it.icon} />
-                  {it.label}
-                  {!!it.badge && <span className="adm-badge">{it.badge}</span>}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {groups.map((g) => {
+            const links = g.items.map((it) => (
+              <Link key={it.href} href={it.href} aria-current={active(it.href) ? "page" : undefined}>
+                <Icon name={it.icon} />
+                {it.label}
+                {!!it.badge && <span className="adm-badge">{it.badge}</span>}
+              </Link>
+            ));
+            const icon = GROUP_ICONS[g.title];
+            if (!icon) return links; // Dia a dia: sempre à mostra
+            const isOpen = expanded === g.title;
+            const pending = g.items.reduce((sum, it) => sum + (it.badge ?? 0), 0);
+            const panelId = `menu-${icon}`;
+            return (
+              <div key={g.title} className="adm-nav__group" data-open={isOpen}>
+                <button type="button" aria-expanded={isOpen} aria-controls={panelId} onClick={() => setExpanded(isOpen ? null : g.title)}>
+                  <Icon name={icon} />
+                  {g.title}
+                  {/* com o grupo fechado, o aviso de pendência continua visível */}
+                  {!isOpen && pending > 0 && <span className="adm-badge">{pending}</span>}
+                  <Icon name="chevronRight" size={16} className="adm-nav__arrow" />
+                </button>
+                {isOpen && (
+                  <div id={panelId} className="adm-nav__items">
+                    {links}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
         <div className="adm-side__foot">
           <a href="/" target="_blank" rel="noopener">
