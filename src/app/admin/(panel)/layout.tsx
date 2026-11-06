@@ -27,6 +27,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       items: [
         { href: "/admin", label: "Início", icon: "home", module: "agenda" },
         { href: "/admin/mensagens", label: "Orçamentos e mensagens", icon: "inbox", badge: unread, module: "mensagens" },
+        { href: "/admin/inscricoes", label: "Inscrições de eventos", icon: "users", module: "agenda" },
       ],
     },
     { title: "Comercial", items: [res("fornecedores"), res("sindicos"), res("anuncios"), res("parceiros"), res("avaliacoes", pendingReviews)] },

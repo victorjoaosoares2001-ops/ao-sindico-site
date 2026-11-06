@@ -56,3 +56,7 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 - Logos quebrados: a otimização de imagens da Vercel estourou a cota do plano (402). `images.unoptimized: true` em `next.config.ts`.
 - `descricoes-v1`: descrição para as 13 empresas sem texto (só onde estava vazia).
 - Pendente com a equipe: logos de Aki Limpe, Domínio Pinturas, CNN Engenharia, Mega Engenheiros, MDG Engenharia e Manutentudo (não existem no antigo nem dá para confirmar na internet).
+
+## Inscrições em eventos (06/11/2026) — publicado
+- Reclamação da Mari: painel antigo parado desde 15/10. Causa: o domínio passou para o site novo; as inscrições vão para o banco novo (16 entre 19/10 e 06/11, nenhuma perdida). As anteriores seguem em antigo.aosindico.com/panel; o formulário de antigo.aosindico.com ainda grava lá.
+- Nova tela `/admin/inscricoes` no menu Dia a dia, com data, busca e planilha. Aviso por e-mail à equipe a cada inscrição (só sai com Resend configurado).

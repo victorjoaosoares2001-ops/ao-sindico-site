@@ -159,6 +159,7 @@ export async function EventRegistrations({ eventId }: { eventId: string }) {
                 {r.role && <span>{r.role}</span>}
                 {r.condo && <span>{r.condo}</span>}
                 {r.city && <span>{r.city}</span>}
+                <span>{formatDateTime(r.createdAt)}</span>
               </div>
             </div>
             <div className="row-actions">

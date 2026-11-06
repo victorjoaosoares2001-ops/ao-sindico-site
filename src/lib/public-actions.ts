@@ -260,6 +260,7 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
     },
   });
   revalidatePath("/admin", "layout");
+  await notifyTeam(`Nova inscrição: ${event.title}`, [`${name} · ${email} · ${phone}`, get(form, "condo", 160), `${siteUrl()}/admin/inscricoes`]);
   const when = event.startsAt
     ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "full" }).format(event.startsAt)
     : null;
