@@ -110,13 +110,60 @@
 
 .adm-nav__group[data-open="true"] .adm-nav__arrow {
   transform: rotate(90deg);
+  opacity: 1;
+}
+
+/* Grupo aberto: título em destaque, opções numa caixa escura à parte, com letra menor */
+.adm-nav__group[data-open="true"] button {
+  border-radius: 14px 14px 0 0;
+  background: rgba(255, 255, 255, 0.16);
+  font-weight: 700;
+}
+
+.adm-nav__group[data-open="true"] button svg {
+  color: var(--yellow);
 }
 
 .adm-nav__items {
   display: grid;
-  gap: 2px;
-  margin-top: 2px;
-  padding-left: 12px;
+  gap: 1px;
+  padding: 8px 6px 8px 8px;
+  border-left: 3px solid var(--yellow);
+  border-radius: 0 0 14px 14px;
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.adm-nav .adm-nav__items a {
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.adm-nav .adm-nav__items a svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  opacity: 0.7;
+}
+
+.adm-nav .adm-nav__items a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.adm-nav .adm-nav__items a[aria-current="page"] {
+  background: var(--yellow);
+  color: #1c1d21;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.adm-nav .adm-nav__items a[aria-current="page"] svg {
+  color: #1c1d21;
+  opacity: 1;
 }
 
 .adm-nav a {
