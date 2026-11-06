@@ -282,7 +282,12 @@ export function RegistrationForm({ action: bound, eventTitle }: { action: (s: Pu
             <option>Subsíndico(a)</option>
             <option>Conselheiro(a)</option>
             <option>Administradora</option>
+            <option>Gerente predial</option>
+            <option>Zelador(a)</option>
             <option>Fornecedor</option>
+            <option>Patrocinador</option>
+            <option>Staff</option>
+            <option>Visitante</option>
             <option>Outro</option>
           </select>
         </label>

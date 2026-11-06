@@ -65,3 +65,8 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 - Etapa `site-antigo-eventos-videos-v1`: 8 eventos passados (páginas de antigo.aosindico.com/eventos/*, fora da lista do antigo, e mini-sites eventos.aosindico.com/saopaulo e /guarulhos) e 14 vídeos (8 da home do antigo + 6 de eventos do canal; sem o sorteio).
 - /eventos mostra o ano nas edições anteriores e os 3 últimos vídeos. Vídeos com sombra `--shadow-md`.
 - Não importados por falta de data exata: 13º/10º/8º Congresso, 3º/2º Encontro Guarulhos etc. (estão só em Vídeos). Galeria de fotos do 5º Encontro (35 fotos) não veio: não há campo para galeria.
+
+## Inscrições do painel antigo (06/11/2026)
+- Painel antigo: sistema.aosindico.com/manager-setup. Mari/Luiza imprimem etiquetas por ele. Nova tela `/admin/inscricoes` copia a de lá: busca, evento, tipo, total, adicionar, editar, excluir, exportar, gerar etiqueta (uma ou o evento todo) com contador. Etiqueta 90×29 mm em HTML para imprimir; o QR é fixo (`public/legacy/etiqueta-qr.png`, vCard da Luiza), igual ao do PDF antigo.
+- Removido o único (evento+e-mail): o antigo tem 413 repetidos. O site continua sem deixar repetir no formulário público.
+- `scripts/importar-inscricoes-antigas.mts`: importa de JSON fora do repositório (repo é público: nunca versionar dados de inscritos). Refazível pelo `legacyId`.

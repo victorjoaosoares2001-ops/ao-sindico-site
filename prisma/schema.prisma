@@ -291,9 +291,12 @@ model EventRegistration {
   city      String?
   units     String?
   attended  Boolean  @default(false)
+  labelCount Int     @default(0) // quantas vezes a etiqueta foi gerada
+  legacyId  Int? // nº da inscrição no painel antigo (sistema.aosindico.com)
   createdAt DateTime @default(now())
 
-  @@unique([eventId, email])
+  @@index([eventId, email])
+  @@index([legacyId])
 }
 
 model Partner {

@@ -245,7 +245,7 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
   const err = validContact(name, email, phone);
   if (err) return { error: err };
   if (!email) return { error: "Informe seu e-mail: ele é usado para o certificado." };
-  const exists = await db.eventRegistration.findUnique({ where: { eventId_email: { eventId, email } } });
+  const exists = await db.eventRegistration.findFirst({ where: { eventId, email } });
   if (exists) return { ok: true, message: "Este e-mail já estava inscrito neste evento, por isso não entrou uma inscrição nova. Para inscrever outra pessoa, use outro e-mail." };
   await db.eventRegistration.create({
     data: {
@@ -283,7 +283,7 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
 export async function findCertificate(eventId: string, _: PublicFormState, form: FormData): Promise<PublicFormState> {
   const email = get(form, "email", 160).toLowerCase();
   if (!EMAIL.test(email)) return { error: "Digite o e-mail usado na inscrição." };
-  const reg = await db.eventRegistration.findUnique({ where: { eventId_email: { eventId, email } }, include: { event: true } });
+  const reg = await db.eventRegistration.findFirst({ where: { eventId, email }, orderBy: { attended: "desc" }, include: { event: true } });
   if (!reg) return { error: "Não encontramos inscrição com este e-mail." };
   if (!reg.attended) return { error: "Sua presença ainda não foi confirmada pela equipe. Tente novamente mais tarde." };
   if (!reg.event.certificateUrl) return { error: "O certificado deste evento ainda não foi liberado." };

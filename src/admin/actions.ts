@@ -244,6 +244,27 @@ export async function deleteRegistration(eventId: string, registrationId: string
   const r = await db.eventRegistration.delete({ where: { id: registrationId } });
   await logAction(user, "removeu", "inscricoes", eventId, `${r.name} (${r.email})`);
   revalidatePath(`/admin/eventos/${eventId}`);
+  revalidatePath("/admin/inscricoes");
+}
+
+/** Adicionar ou editar inscrição pelo painel (id null = nova). */
+export async function saveRegistration(id: string | null, _: FormState, form: FormData): Promise<FormState> {
+  const user = await checkAdmin("agenda");
+  if (!user) return NO_PERMISSION;
+  const get = (k: string, max: number) => String(form.get(k) ?? "").trim().slice(0, max);
+  const data = {
+    eventId: get("eventId", 40),
+    name: get("name", 120),
+    email: get("email", 160).toLowerCase(),
+    phone: get("phone", 40) || null,
+    condo: get("condo", 160) || null,
+    role: get("role", 60) || null,
+  };
+  if (!data.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) return { error: "Preencha o nome e um e-mail válido." };
+  if (!(await db.event.findUnique({ where: { id: data.eventId }, select: { id: true } }))) return { error: "Escolha o evento." };
+  const r = id ? await db.eventRegistration.update({ where: { id }, data }) : await db.eventRegistration.create({ data });
+  await logAction(user, id ? "editou" : "criou", "inscricoes", r.id, `${r.name} (${r.email})`);
+  redirect("/admin/inscricoes");
 }
 
 // ---------- Textos do site ----------

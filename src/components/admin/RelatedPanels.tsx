@@ -126,13 +126,17 @@ export async function SupplierPanels({ supplierId }: { supplierId: string }) {
 
 /** Inscrições do evento, com presença e exportação. */
 export async function EventRegistrations({ eventId }: { eventId: string }) {
-  const regs = await db.eventRegistration.findMany({ where: { eventId }, orderBy: { createdAt: "asc" } });
-  const present = regs.filter((r) => r.attended).length;
+  // shortcut: mostra só as 200 mais novas aqui (eventos antigos têm 600+); a lista completa fica em Inscrições
+  const [regs, total, present] = await Promise.all([
+    db.eventRegistration.findMany({ where: { eventId }, orderBy: { createdAt: "desc" }, take: 200 }),
+    db.eventRegistration.count({ where: { eventId } }),
+    db.eventRegistration.count({ where: { eventId, attended: true } }),
+  ]);
   return (
     <section className="panel" style={{ marginTop: 18 }}>
       <div className="panel__pad" style={{ paddingBottom: 0 }}>
         <div className="panel__title">
-          Inscrições ({regs.length}) · presentes: {present}
+          Inscrições ({total}) · presentes: {present}
           {regs.length > 0 && (
             <a href={`/admin/eventos/${eventId}/inscricoes.csv`} className="btn btn--sm btn--ghost">
               <Icon name="file" size={15} /> Baixar planilha (CSV)

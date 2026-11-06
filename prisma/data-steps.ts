@@ -568,6 +568,35 @@ async function main() {
     return `${r.count} capa`;
   });
 
+  //    Eventos do painel antigo (sistema.aosindico.com) que ainda não existiam: recebem as inscrições antigas.
+  //    Cursos e o registro avulso entram fora do site (só para guardar as inscrições).
+  await step("painel-antigo-eventos-v1", async () => {
+    const list: [string, string, boolean][] = [
+      ["5º Encontro de Zeladores e Gerente Predial", "2026-04-25", true],
+      ["4º Encontro de Zeladores e Gerente Predial", "2025-07-26", true],
+      ["15º Congresso de Síndicos de São Paulo e Regiões", "2025-06-28", true],
+      ["3º Encontro de Síndicos do ABC", "2020-05-23", true],
+      ["1º Encontro de Zeladores de São Paulo e Regiões", "2020-02-29", true],
+      ["10º Congresso Portal AoSindico.com", "2019-11-30", true],
+      ["3º Encontro de Síndicos de Guarulhos", "2019-08-17", true],
+      ["2º Encontro no ABC", "2019-04-27", true],
+      ["Curso Presencial - Síndico Profissional", "2021-02-20", false],
+      ["Curso Online - Zelador Predial", "2020-09-19", false],
+      ["Curso Online - Mediação de Conflito", "2020-08-22", false],
+      ["Curso de CIPA", "2020-02-22", false],
+      ["Curso Porteiro Predial", "2020-02-15", false],
+      ["Quem Somos (inscrição avulsa)", "2026-06-01", false],
+    ];
+    let n = 0;
+    for (const [title, date, published] of list) {
+      const slug = slugify(title);
+      if (await db.event.findUnique({ where: { slug } })) continue;
+      await db.event.create({ data: { title, slug, startsAt: new Date(`${date}T00:00:00-03:00`), registrationOpen: false, published } });
+      n++;
+    }
+    return `${n} eventos`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.

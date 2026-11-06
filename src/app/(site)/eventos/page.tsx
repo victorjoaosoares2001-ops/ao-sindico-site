@@ -13,7 +13,7 @@ export default async function EventsPage() {
   const now = new Date();
   const [upcoming, past, videos] = await Promise.all([
     db.event.findMany({ where: { published: true, OR: [{ startsAt: { gte: now } }, { startsAt: null }] }, orderBy: { startsAt: "asc" } }),
-    db.event.findMany({ where: { published: true, startsAt: { lt: now } }, orderBy: { startsAt: "desc" }, take: 12 }),
+    db.event.findMany({ where: { published: true, startsAt: { lt: now } }, orderBy: { startsAt: "desc" }, take: 30 }),
     db.video.findMany({ where: { published: true }, orderBy: [{ featured: "desc" }, { publishedAt: "desc" }], take: 3 }),
   ]);
   if (upcoming.length + past.length === 0) notFound(); // sem eventos: seção oculta
