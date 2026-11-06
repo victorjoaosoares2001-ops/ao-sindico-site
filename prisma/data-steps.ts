@@ -546,6 +546,23 @@ async function main() {
     return `${newEvents} eventos, ${newVideos} vídeos`;
   });
 
+  //    O servidor antigo bloqueia downloads vindos da Vercel: as capas dos eventos ficam no próprio site.
+  await step("capas-eventos-locais-v1", async () => {
+    const OLD = "https://antigo.aosindico.com/storage";
+    const covers: [string, string][] = [
+      ["events/01095990017551904787-encontro-de-sindicos-de-guarulhos-e-regiao.jpg", "7-encontro-guarulhos.jpg"],
+      ["posts/whatsapp-image-2024-10-25-at-094604jpeg_095832.jpg", "6-congresso-guarulhos.jpg"],
+      ["events/3-encontro-de-zeladores_094340.png", "3-encontro-zeladores.png"],
+      ["events/capa_131753.jpg", "14-congresso-sp.jpg"],
+      ["events/capa_122219.jpg", "5-encontro-guarulhos.jpg"],
+      ["events/capa-2-encontro-zeladores_113810.jpg", "2-encontro-zeladores.jpg"],
+      ["events/oitavo-encontro-de-sindicos-em-guarulhos_112623.png", "8-encontro-guarulhos.png"],
+    ];
+    let n = 0;
+    for (const [from, file] of covers) n += (await db.event.updateMany({ where: { cover: `${OLD}/${from}` }, data: { cover: `/legacy/eventos/${file}` } })).count;
+    return `${n} capas`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
