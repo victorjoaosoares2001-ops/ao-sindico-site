@@ -6,9 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { Logo } from "@/components/Logo";
 
-const MAIN = [
+const MAIN: { href: string; label: string; short?: string }[] = [
   { href: "/fornecedores", label: "Fornecedores" },
-  { href: "/sindicos-profissionais", label: "Síndicos profissionais" },
+  { href: "/sindicos-profissionais", label: "Síndicos profissionais", short: "Síndicos" }, // barra do computador lotada: o logo encostava em Fornecedores
   { href: "/informe-se", label: "Informe-se" },
   { href: "/tira-duvidas", label: "Tira-Dúvidas" },
   { href: "/eventos", label: "Eventos" },
@@ -108,8 +108,8 @@ export function Nav({ whatsappHref, hidden = [] }: { whatsappHref: string | null
             <ul className="nav__links">
               {MAIN.filter(show).map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} prefetch={false} aria-current={isActive(l.href) ? "page" : undefined}>
-                    {l.label}
+                  <Link href={l.href} prefetch={false} aria-label={l.label} aria-current={isActive(l.href) ? "page" : undefined}>
+                    {l.short ?? l.label}
                   </Link>
                 </li>
               ))}
