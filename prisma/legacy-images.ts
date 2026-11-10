@@ -1,13 +1,17 @@
 /**
- * Copia as imagens ainda servidas por aosindico.com/storage para o armazenamento do projeto
- * (Vercel Blob em produção; pasta UPLOAD_DIR localmente) e troca as referências no banco.
- * Idempotente: nome fixo por URL (hash) e roda de novo no próximo deploy se algo faltar.
+ * Copia as imagens ainda servidas por aosindico.com/storage para public/legado (vão junto com o site)
+ * e troca as referências no banco. Idempotente: nome fixo por URL (hash).
+ * Antes ficavam no Vercel Blob, que foi bloqueado em 11/2026 e derrubou todas as fotos: nada de Blob aqui.
  */
 import type { PrismaClient } from "@prisma/client";
-import { put } from "@vercel/blob";
 import { createHash } from "node:crypto";
+import { existsSync, readdirSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+
+const PUBLIC_DIR = path.resolve("public/legado");
+// endereços antigos das mesmas cópias: Vercel Blob (bloqueado) e a pasta local de desenvolvimento
+const OLD_COPIES = /https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/legado\/|\/uploads\/legado\//g;
 
 const LEGACY = /https?:\/\/(?:www\.|antigo\.)?aosindico\.com\/storage\/[^\s"')\]<>]+/g;
 const HEADERS = { "user-agent": "Mozilla/5.0 (migracao Ao Sindico)" };
@@ -44,18 +48,51 @@ async function store(url: string): Promise<string | null> {
   if (!ext) return null;
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.length === 0 || buf.length > 15 * 1024 * 1024) return null;
-  const name = `legado/${createHash("sha1").update(url).digest("hex").slice(0, 20)}.${ext}`;
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(name, buf, { access: "public", contentType: type || `image/${ext}`, addRandomSuffix: false, allowOverwrite: true });
-    return blob.url;
+  const name = `${createHash("sha1").update(url).digest("hex").slice(0, 20)}.${ext}`;
+  // roda antes do `next build`: o que for gravado em public/ entra na publicação
+  await mkdir(PUBLIC_DIR, { recursive: true });
+  await writeFile(path.join(PUBLIC_DIR, name), buf);
+  return `/legado/${name}`;
+}
+
+/** Troca os endereços das cópias já feitas (Blob / pasta local) por /legado/ e avisa se faltar algum arquivo. */
+async function relocateCopies(db: PrismaClient) {
+  const d = (m: string) => (db as unknown as Record<string, Delegate>)[m];
+  const have = new Set(existsSync(PUBLIC_DIR) ? readdirSync(PUBLIC_DIR) : []);
+  const missing = new Set<string>();
+  let updated = 0;
+  const swap = (v: string) => {
+    const next = v.replace(OLD_COPIES, "/legado/");
+    for (const m of next.matchAll(/\/legado\/([a-f0-9]{20}\.\w+)/g)) if (!have.has(m[1])) missing.add(m[1]);
+    return next;
+  };
+  for (const col of COLUMNS) {
+    for (const where of [{ contains: ".blob.vercel-storage.com/legado/" }, { contains: "/uploads/legado/" }]) {
+      const rows = await d(col.model).findMany({ where: { [col.field]: where }, select: { id: true, [col.field]: true } });
+      for (const r of rows) {
+        const v = r[col.field];
+        if (!v) continue;
+        await d(col.model).update({ where: { id: r.id }, data: { [col.field]: swap(v) } });
+        updated++;
+      }
+    }
   }
-  const dir = path.resolve(process.env.UPLOAD_DIR || "./uploads");
-  await mkdir(path.join(dir, "legado"), { recursive: true });
-  await writeFile(path.join(dir, name), buf);
-  return `/uploads/${name}`;
+  for (const s of await db.siteSetting.findMany({ where: { value: { contains: "/legado/" } } })) {
+    const next = swap(s.value);
+    if (next !== s.value) {
+      await db.siteSetting.update({ where: { key: s.key }, data: { value: next } });
+      updated++;
+    }
+  }
+  // imagens enviadas pelo painel continuam no Blob: só listo quantas ficaram presas lá
+  let stuck = 0;
+  for (const col of COLUMNS) stuck += (await d(col.model).findMany({ where: { [col.field]: { contains: ".blob.vercel-storage.com/" } }, select: { id: true } })).length;
+  console.log(`✔ imagens-no-site — ${updated} referências trocadas para /legado/` + (stuck ? `; ${stuck} ainda no Vercel Blob (enviadas pelo painel)` : ""));
+  if (missing.size) console.log(`  FALTAM em public/legado: ${[...missing].join(" ")}`);
 }
 
 export async function migrateLegacyImages(db: PrismaClient) {
+  await relocateCopies(db);
   const started = Date.now();
   const d = (m: string) => (db as unknown as Record<string, Delegate>)[m];
 
