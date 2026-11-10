@@ -621,6 +621,35 @@ async function main() {
     return done.join(", ") || "nenhuma";
   });
 
+  //    Matérias que o antigo escondia da listagem mas que outras matérias citam (16 links quebrados na auditoria de 10/11).
+  await step("acervo-materias-escondidas-v1", async () => {
+    type A = { slug: string; title: string; cover: string | null; date: string; sections: string[]; views: number; author: string | null; authorBio: string | null; authorPhoto: string | null; content: string };
+    const items = await json<A>("artigos");
+    const created: string[] = [];
+    for (const a of items) {
+      if (!a.title || !a.content) continue;
+      const slug = slugify(a.slug || a.title);
+      if (await db.article.findUnique({ where: { slug } })) continue;
+      const section = a.sections[0] ? await ensureSection(a.sections[0]) : null;
+      const author = a.author ? await ensureAuthor(a.author, { bio: a.authorBio, photo: a.authorPhoto }) : null;
+      await db.article.create({
+        data: {
+          slug,
+          title: a.title,
+          content: a.content,
+          excerpt: excerptOf(a.content),
+          cover: a.cover,
+          views: a.views,
+          publishedAt: Number.isNaN(Date.parse(a.date)) ? new Date() : new Date(a.date),
+          sectionId: section?.id ?? null,
+          authorId: author?.id ?? null,
+        },
+      });
+      created.push(a.title.slice(0, 40));
+    }
+    return `${created.length} novas` + (created.length ? `: ${created.join("; ")}` : "");
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.

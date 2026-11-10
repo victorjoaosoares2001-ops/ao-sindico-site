@@ -39,6 +39,9 @@ type Delegate = {
 };
 
 async function store(url: string): Promise<string | null> {
+  const hash = createHash("sha1").update(url).digest("hex").slice(0, 20);
+  const local = existsSync(PUBLIC_DIR) ? readdirSync(PUBLIC_DIR).find((f) => f.startsWith(hash + ".")) : undefined;
+  if (local) return `/legado/${local}`;
   // aosindico.com agora aponta para o site novo: os arquivos antigos ficaram em antigo.aosindico.com
   const from = url.replace(/\/\/(?:www\.)?aosindico\.com\//, "//antigo.aosindico.com/");
   const res = await fetch(from, { headers: HEADERS, signal: AbortSignal.timeout(25_000) });

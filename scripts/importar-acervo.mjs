@@ -122,11 +122,40 @@ async function artigos() {
       out.push(have.get(url));
       continue;
     }
+    const item = await fetchArticle(url);
+    if (item) out.push(item);
+    process.stdout.write(`\r  matérias ${i}/${links.size}`);
+    if (i % 25 === 0) await save("artigos", out);
+  }
+  console.log();
+  await save("artigos", out);
+}
+
+/** Matérias que existem no antigo mas não aparecem na listagem dele (só por link). Junta ao artigos.json. */
+async function artigosExtras(file) {
+  const slugs = JSON.parse(await readFile(file, "utf8"));
+  const out = await loadExisting("artigos");
+  const have = new Set(out.map((a) => a.slug));
+  let n = 0;
+  for (const slug of slugs) {
+    if (have.has(slug)) continue;
+    const item = await fetchArticle(`${BASE}/informe/${encodeURIComponent(slug)}`);
+    if (item) {
+      out.push(item);
+      have.add(item.slug);
+      n++;
+    } else console.log(`  não encontrada: ${slug}`);
+  }
+  await save("artigos", out);
+  console.log(`  ${n} matérias extras`);
+}
+
+async function fetchArticle(url) {
     const $ = await get(url);
-    if (!$) continue;
+    if (!$) return null;
     const d = $(".blog_details").first();
     const title = clean(d.find("h1").first().text());
-    if (!title) continue;
+    if (!title) return null;
     const day = clean($(".blog_item_date h3").first().text());
     const [mon, year] = clean($(".blog_item_date p").first().text()).split("|").map((s) => s.trim().toLowerCase());
     const month = MONTHS[mon?.slice(0, 3)] ?? 1;
@@ -135,9 +164,9 @@ async function artigos() {
     // só o bloco do autor no fim da matéria (o menu do site também tem links de colunistas)
     const authorLink = $(".blog-author a[href*='/colunista/']").first();
     const authorBox = $(".blog-author").first();
-    out.push({
+    return {
       url,
-      slug: url.split("/informe/")[1],
+      slug: decodeURIComponent(url.split("/informe/")[1]),
       title,
       cover: abs($(".blog_item_img img").first().attr("src")),
       date: `${year}-${String(month).padStart(2, "0")}-${String(day || 1).padStart(2, "0")}T10:00:00-03:00`,
@@ -148,12 +177,7 @@ async function artigos() {
       authorBio: clean(authorBox.find("p").first().text()) || null,
       authorPhoto: abs(authorBox.find("img").first().attr("src")),
       content: toMarkdown($, d),
-    });
-    process.stdout.write(`\r  matérias ${i}/${links.size}`);
-    if (i % 25 === 0) await save("artigos", out);
-  }
-  console.log();
-  await save("artigos", out);
+    };
 }
 
 // ---------- Fornecedores ----------
@@ -263,4 +287,5 @@ if (what === "fornecedores" || what === "todos") await fornecedores();
 if (what === "sindicos" || what === "todos") await sindicos();
 if (what === "duvidas" || what === "todos") await duvidas();
 if (what === "artigos" || what === "todos") await artigos();
+if (what === "artigos-extras") await artigosExtras(process.argv[3]);
 if (what === "banners" || what === "todos") await banners();

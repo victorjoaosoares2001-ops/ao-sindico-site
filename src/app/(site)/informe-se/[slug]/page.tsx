@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { NewsletterForm } from "@/components/site/Forms";
 import { db } from "@/lib/db";
-import { formatDate, readingTime } from "@/lib/format";
+import { formatDate, readingTime, slugify } from "@/lib/format";
 import { renderMarkdown } from "@/lib/markdown";
 import { activeCampaigns, adHref } from "@/lib/queries";
 import { initials } from "@/components/site/Cards";
@@ -26,8 +26,20 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function ArticlePage({ params }: { params: Params }) {
-  const a = await load((await params).slug);
-  if (!a) notFound();
+  const { slug } = await params;
+  const a = await load(slug);
+  if (!a) {
+    // links do site antigo: endereço sem corte, com acento codificado ou caractere invisível
+    let raw = slug;
+    try {
+      raw = decodeURIComponent(slug);
+    } catch {}
+    const fixed = slugify(raw);
+    if (fixed && fixed !== slug && (await load(fixed))) permanentRedirect(`/informe-se/${fixed}`);
+    const words = raw.replace(/[-_]+/g, " ").replace(/[^\p{L}\p{N} ]/gu, "").trim();
+    if (words) redirect(`/busca?q=${encodeURIComponent(words.split(" ").slice(0, 6).join(" "))}`);
+    notFound();
+  }
 
   const [latest, ads] = await Promise.all([
     db.article.findMany({
