@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { db } from "@/lib/db";
 import { uploadDir } from "@/lib/upload";
 
 const TYPES: Record<string, string> = {
@@ -16,17 +17,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ path: s
   const base = uploadDir();
   const file = path.resolve(base, ...parts);
   if (!file.startsWith(base + path.sep)) return new Response("Not found", { status: 404 });
+  const ext = file.split(".").pop()?.toLowerCase() ?? "";
+  const headers = {
+    "Content-Type": TYPES[ext] ?? "application/octet-stream",
+    "Cache-Control": "public, max-age=31536000, immutable",
+    ...(ext === "svg" ? { "Content-Security-Policy": "script-src 'none'" } : {}),
+  };
   try {
-    const data = await readFile(file);
-    const ext = file.split(".").pop()?.toLowerCase() ?? "";
-    return new Response(new Uint8Array(data), {
-      headers: {
-        "Content-Type": TYPES[ext] ?? "application/octet-stream",
-        "Cache-Control": "public, max-age=31536000, immutable",
-        ...(ext === "svg" ? { "Content-Security-Policy": "script-src 'none'" } : {}),
-      },
-    });
+    return new Response(new Uint8Array(await readFile(file)), { headers });
   } catch {
-    return new Response("Not found", { status: 404 });
+    // na Vercel o arquivo está no banco (ver lib/upload.ts)
+    const row = parts.length === 1 ? await db.uploadFile.findUnique({ where: { name: parts[0] } }) : null;
+    return row ? new Response(new Uint8Array(row.data), { headers: { ...headers, "Content-Type": row.type } }) : new Response("Not found", { status: 404 });
   }
 }

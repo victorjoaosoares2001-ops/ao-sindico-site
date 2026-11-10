@@ -74,3 +74,8 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 ## Patrocinadores e Condomínios do painel antigo (06/11/2026)
 - Models `Sponsorship` e `Condominium`, seções no menu Comercial (cadastro genérico de `resources.ts`). Importados por `prisma/legacy-registrations.ts` a partir de `prisma/privado/` (fora do git), no build.
 - Logos dos patrocinadores não vieram: o painel antigo só guarda o nome do arquivo, sem caminho público.
+
+## Vercel Blob bloqueado (10/11/2026)
+- A loja do Blob foi bloqueada e derrubou todas as fotos (403 "Your store is blocked"). Cópias do site antigo agora ficam em `public/legado/` (mesmo nome por hash); `prisma/legacy-images.ts` troca os endereços a cada deploy e avisa se faltar arquivo.
+- Envio de imagem pelo painel grava no banco (`UploadFile`) na Vercel e é servido em `/uploads/<nome>`. Blob não é mais usado.
+- Logo da ATLAS (enviada pelo painel) ficou presa no Blob: saiu do cartão e o endereço foi para as observações internas.

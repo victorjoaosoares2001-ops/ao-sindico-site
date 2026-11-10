@@ -343,6 +343,14 @@ model Condominium {
   @@index([legacyId])
 }
 
+// Imagens enviadas pelo painel na Vercel (sem disco). Servidas em /uploads/<name>.
+model UploadFile {
+  name      String   @id
+  type      String
+  data      Bytes
+  createdAt DateTime @default(now())
+}
+
 model Partner {
   id          String   @id @default(cuid())
   name        String

@@ -2,7 +2,7 @@ import "server-only";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
-import { put } from "@vercel/blob";
+import { db } from "./db";
 
 const ALLOWED: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -20,9 +20,9 @@ export function uploadDir() {
 }
 
 /**
- * Salva a imagem e devolve a URL pública.
- * Na Vercel (BLOB_READ_WRITE_TOKEN definido) vai para o Vercel Blob;
- * em servidor próprio, para a pasta UPLOAD_DIR servida em /uploads.
+ * Salva a imagem e devolve a URL pública (/uploads/<nome>).
+ * Na Vercel (sem disco) vai para o banco; em servidor próprio, para a pasta UPLOAD_DIR.
+ * O Vercel Blob foi abandonado em 11/2026: a loja foi bloqueada e todas as imagens dele caíram.
  */
 export async function saveUpload(file: File): Promise<string> {
   const ext = ALLOWED[file.type];
@@ -30,9 +30,9 @@ export async function saveUpload(file: File): Promise<string> {
   if (file.size > MAX_UPLOAD) throw new Error("Imagem muito grande (máximo 6 MB).");
   const name = `${Date.now().toString(36)}-${randomBytes(4).toString("hex")}.${ext}`;
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(`uploads/${name}`, file, { access: "public", contentType: file.type });
-    return blob.url;
+  if (process.env.VERCEL) {
+    await db.uploadFile.create({ data: { name, type: file.type, data: Buffer.from(await file.arrayBuffer()) } });
+    return `/uploads/${name}`;
   }
 
   await mkdir(uploadDir(), { recursive: true });

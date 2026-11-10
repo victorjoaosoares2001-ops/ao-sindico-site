@@ -606,6 +606,21 @@ async function main() {
   if (existsSync(priv("patrocinadores-antigos"))) await importLegacySponsors(db, priv("patrocinadores-antigos"));
   if (existsSync(priv("condominios-antigos"))) await importLegacyCondos(db, priv("condominios-antigos"));
 
+  //    Imagens enviadas pelo painel ficaram presas no Vercel Blob (bloqueado): tira do cartão para não aparecer
+  //    imagem quebrada e guarda o endereço nas observações internas, para reenviar quando der.
+  await step("imagens-presas-no-blob-v1", async () => {
+    const done: string[] = [];
+    for (const field of ["logo", "cover"] as const) {
+      const rows = await db.supplier.findMany({ where: { [field]: { contains: ".blob.vercel-storage.com/uploads/" } } });
+      for (const r of rows) {
+        const note = `Imagem (${field === "logo" ? "logo" : "capa"}) enviada antes do bloqueio do Vercel Blob, reenviar: ${r[field]}`;
+        await db.supplier.update({ where: { id: r.id }, data: { [field]: null, notes: [r.notes, note].filter(Boolean).join("\n") } });
+        done.push(`${r.name} (${field})`);
+      }
+    }
+    return done.join(", ") || "nenhuma";
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.
