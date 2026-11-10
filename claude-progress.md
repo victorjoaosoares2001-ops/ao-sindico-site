@@ -79,3 +79,7 @@ Acabamento visual (outra ferramenta). Nenhuma pendência de engenharia aberta de
 - A loja do Blob foi bloqueada e derrubou todas as fotos (403 "Your store is blocked"). Cópias do site antigo agora ficam em `public/legado/` (mesmo nome por hash); `prisma/legacy-images.ts` troca os endereços a cada deploy e avisa se faltar arquivo.
 - Envio de imagem pelo painel grava no banco (`UploadFile`) na Vercel e é servido em `/uploads/<nome>`. Blob não é mais usado.
 - Logo da ATLAS (enviada pelo painel) ficou presa no Blob: saiu do cartão e o endereço foi para as observações internas.
+
+## Inscrição só para categorias gratuitas (10/11/2026)
+- `src/lib/event-roles.ts`: síndico, síndico profissional, subsíndico, conselheiro, administradora, gerente predial, zelador. O servidor recusa qualquer outra (Fornecedor/Outro/Visitante saíram). Condomínio obrigatório.
+- Formulário em 3 etapas no visual do pedido de orçamento (`.reg`). Bloco `#parceiros` para empresas em todo evento futuro: arte do campo `partnerBanner` (painel → Eventos → "Arte para empresas") clicável para o WhatsApp, ou só o texto se não houver arte.

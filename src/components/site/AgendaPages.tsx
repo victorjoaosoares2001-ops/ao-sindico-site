@@ -3,7 +3,8 @@ import type { Course, Event, Partner } from "@prisma/client";
 import { Icon } from "@/components/Icon";
 import { AgendaCard } from "@/components/site/Cards";
 import { CertificateForm, NewsletterForm, RegistrationForm } from "@/components/site/Forms";
-import { formatDate } from "@/lib/format";
+import { FREE_ROLES_TEXT } from "@/lib/event-roles";
+import { formatDate, whatsappLink } from "@/lib/format";
 import { renderMarkdown } from "@/lib/markdown";
 import { findCertificate, registerForEvent } from "@/lib/public-actions";
 
@@ -66,7 +67,7 @@ export function AgendaList({ kind, upcoming, past, children }: { kind: "evento" 
 
 type EventFull = Event & { sponsors: Partner[]; _count: { registrations: number } };
 
-export function AgendaDetail({ item, kind }: { item: EventFull | Course; kind: "evento" | "curso" }) {
+export function AgendaDetail({ item, kind, whatsapp }: { item: EventFull | Course; kind: "evento" | "curso"; whatsapp?: string | null }) {
   const isEvent = kind === "evento";
   const ev = isEvent ? (item as EventFull) : null;
   const facts: [string, string][] = [];
@@ -87,6 +88,8 @@ export function AgendaDetail({ item, kind }: { item: EventFull | Course; kind: "
   const past = !!item.startsAt && item.startsAt < new Date();
   const full = !!ev?.capacity && ev._count.registrations >= ev.capacity;
   const canRegister = !!ev && !past && ev.registrationOpen && !ev.link && !full;
+  // empresas não entram pela inscrição gratuita: falam com a Luiza no WhatsApp
+  const partnerHref = ev ? whatsappLink(whatsapp || "(11) 94005-6720", `Olá! Sou de uma empresa e quero participar do ${item.title} como parceiro.`) : null;
   const mapsUrl = ev && (ev.address || ev.venue) ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([ev.venue, ev.address, ev.city].filter(Boolean).join(", "))}` : null;
 
   return (
@@ -108,12 +111,32 @@ export function AgendaDetail({ item, kind }: { item: EventFull | Course; kind: "
       <section className="section section--first">
         <div className="container profile">
           <div>
-            {canRegister && (
-              <div className="card" id="inscricao" style={{ scrollMarginTop: 110 }}>
-                <h2>Inscrição</h2>
-                <p style={{ color: "var(--ink-3)", margin: "-6px 0 18px", fontSize: 15 }}>Gratuita. Você recebe a confirmação na tela; o e-mail informado dá acesso ao certificado.</p>
-                <RegistrationForm action={registerForEvent.bind(null, ev!.id)} eventTitle={item.title} />
-              </div>
+            {canRegister && <RegistrationForm action={registerForEvent.bind(null, ev!.id)} eventTitle={item.title} partners={!!partnerHref} />}
+            {ev && !past && partnerHref && (
+              <section className="card partner-cta" id="parceiros" data-has-art={!!ev.partnerBanner}>
+                {ev.partnerBanner && (
+                  <a href={partnerHref} target="_blank" rel="noopener" className="partner-cta__art" aria-label="Empresas: falar no WhatsApp sobre a parceria">
+                    <img src={ev.partnerBanner} alt={`${item.title}: empresas, sejam parceiras`} loading="lazy" />
+                    <span className="partner-cta__tap">
+                      <Icon name="whatsapp" size={18} /> Clique e fale com a gente
+                    </span>
+                  </a>
+                )}
+                <div className="partner-cta__text">
+                  <span className="chip chip--magenta">Empresas e fornecedores</span>
+                  <h2>Sua empresa no evento</h2>
+                  <p>
+                    A inscrição gratuita é exclusiva para {FREE_ROLES_TEXT}. Empresas e fornecedores participam como <b>parceiros patrocinadores</b>, com divulgação da marca e contato direto com síndicos e gestores.
+                  </p>
+                  <p className="partner-cta__note">As condições de participação são combinadas com a nossa equipe.</p>
+                  <a href={partnerHref} target="_blank" rel="noopener" className="btn btn--magenta btn--arrow">
+                    Quero ser parceiro
+                    <span className="btn__dot">
+                      <Icon name="whatsapp" size={16} />
+                    </span>
+                  </a>
+                </div>
+              </section>
             )}
             {"description" in item && item.description && (
               <div className="card">

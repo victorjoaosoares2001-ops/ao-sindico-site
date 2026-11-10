@@ -509,6 +509,7 @@ export const RESOURCES: ResourceDef[] = [
       { name: "certificateUrl", label: "Link do certificado (após o evento)", type: "url", hint: "Liberado só para inscritos marcados como presentes." },
       { name: "link", label: "Inscrição externa (opcional)", type: "url", hint: "Vazio = inscrição pelo próprio site." },
       { name: "cover", label: "Imagem", type: "image", side: true },
+      { name: "partnerBanner", label: "Arte para empresas (parceiros)", type: "image", side: true, hint: "Aparece na página do evento e leva ao WhatsApp. Vazio = só o texto para empresas." },
       { name: "startsAt", label: "Data e hora", type: "datetime", side: true },
       { name: "registrationOpen", label: "Inscrições abertas", type: "bool", side: true, defaultValue: true },
       { name: "capacity", label: "Vagas", type: "number", side: true, hint: "0 = sem limite." },

@@ -3705,3 +3705,175 @@ html.lite .marquee--logos .marquee__track {
     animation-duration: var(--marquee-s, 90s) !important;
   }
 }
+
+/* ---------- Inscrição em evento (etapas, vidro fumê) e bloco para empresas ---------- */
+
+.reg {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(22px, 3.2vw, 34px);
+  border-radius: var(--r-lg);
+  color: #fff;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(20, 150, 160, 0.38), transparent 60%),
+    radial-gradient(90% 70% at 100% 100%, rgba(214, 40, 110, 0.32), transparent 60%),
+    rgba(24, 25, 30, 0.9);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 30px 60px -30px rgba(20, 21, 24, 0.6),
+    0 10px 24px -14px rgba(20, 21, 24, 0.35);
+  backdrop-filter: saturate(150%) blur(22px);
+  -webkit-backdrop-filter: saturate(150%) blur(22px);
+  scroll-margin-top: 110px;
+}
+
+.reg h2 {
+  color: #fff;
+}
+
+.reg .wizard__progress li span {
+  font-weight: 600;
+}
+
+.reg__company {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  color: #fff;
+  transition:
+    background 0.2s,
+    transform 0.2s var(--ease);
+}
+
+.reg__company:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.reg__company span {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.reg__company small {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.reg__company svg:first-child {
+  color: var(--yellow);
+}
+
+.partner-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 32px);
+  align-items: center;
+  scroll-margin-top: 110px;
+}
+
+.partner-cta[data-has-art="false"] {
+  grid-template-columns: 1fr;
+}
+
+.partner-cta__art {
+  position: relative;
+  display: block;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+
+.partner-cta__art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* indicação de clique sempre visível (celular não tem hover), numa faixa abaixo da arte para não tapar nada */
+.partner-cta__tap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #25d366;
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.partner-cta__tap svg {
+  animation: partner-tap 2.4s var(--ease) infinite;
+}
+
+.partner-cta__art:hover,
+.partner-cta__art:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 60px -24px rgba(20, 21, 24, 0.55);
+}
+
+.partner-cta__art:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
+
+@keyframes partner-tap {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-cta__tap svg {
+    animation: none;
+  }
+}
+
+.partner-cta__text {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
+.partner-cta__text h2 {
+  margin: 0;
+}
+
+.partner-cta__text p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 15.5px;
+}
+
+.partner-cta__note {
+  font-size: 14px !important;
+  color: var(--ink-3) !important;
+}
+
+@media (max-width: 640px) {
+  .partner-cta {
+    grid-template-columns: 1fr;
+  }
+  .partner-cta__art {
+    max-width: 360px;
+    width: 100%;
+    justify-self: center;
+  }
+}

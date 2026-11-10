@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { Icon } from "@/components/Icon";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { Icon, type IconName } from "@/components/Icon";
+import { FREE_ROLES } from "@/lib/event-roles";
 import {
   findCertificate,
   registerForEvent,
@@ -253,66 +254,161 @@ export function ReviewForm({ action: bound }: { action: (s: PublicFormState, f: 
   );
 }
 
-export function RegistrationForm({ action: bound, eventTitle }: { action: (s: PublicFormState, f: FormData) => Promise<PublicFormState>; eventTitle: string }) {
+const REG_STEPS = ["Perfil", "Seus dados", "Condomínio"];
+const ROLE_ICONS: Record<string, IconName> = {
+  "Síndico(a)": "key",
+  "Síndico(a) profissional": "briefcase",
+  "Subsíndico(a)": "users",
+  "Conselheiro(a)": "scale",
+  Administradora: "building",
+  "Gerente predial": "settings",
+  "Zelador(a)": "wrench",
+};
+
+/** Inscrição em evento, em etapas. Só as categorias gratuitas; empresa vai para o bloco de parceiros (#parceiros). */
+export function RegistrationForm({ action: bound, eventTitle, partners }: { action: (s: PublicFormState, f: FormData) => Promise<PublicFormState>; eventTitle: string; partners?: boolean }) {
   const [state, action, pending] = useActionState<PublicFormState, FormData>(bound, {});
-  if (state.ok) return <Done title={state.message?.startsWith("Este e-mail já") ? "Você já está inscrito(a)" : "Inscrição confirmada!"} message={state.message} />;
+  const [step, setStep] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
+  const refs = useRef<(HTMLFieldSetElement | null)[]>([]);
+  if (state.ok)
+    return (
+      <div className="card">
+        <Done title={state.message?.startsWith("Este e-mail já") ? "Você já está inscrito(a)" : "Inscrição confirmada!"} message={state.message} />
+      </div>
+    );
+
+  const goTo = (n: number) => {
+    setStep(n);
+    requestAnimationFrame(() => {
+      const top = formRef.current?.getBoundingClientRect().top ?? 0;
+      if (top < 0) formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+  const next = () => {
+    const invalid = refs.current[step]?.querySelector<HTMLInputElement>(":invalid");
+    if (invalid) return invalid.reportValidity();
+    goTo(step + 1);
+  };
+  const fs = (i: number) => ({
+    ref: (el: HTMLFieldSetElement | null) => {
+      refs.current[i] = el;
+    },
+    hidden: step !== i,
+    style: { border: 0, padding: 0, margin: 0, minWidth: 0 },
+  });
+
   return (
-    <form action={action} className="form-grid" aria-label={`Inscrição: ${eventTitle}`}>
+    <form ref={formRef} action={action} id="inscricao" className="reg quote quote--dark wizard" aria-label={`Inscrição: ${eventTitle}`}>
+      <div className="quote__head">
+        <div>
+          <h2>Inscrição gratuita</h2>
+          <p>Para síndicos e equipes de condomínio. Leva menos de um minuto.</p>
+        </div>
+      </div>
+      <ol className="wizard__progress" aria-label={`Etapa ${step + 1} de ${REG_STEPS.length}: ${REG_STEPS[step]}`}>
+        {REG_STEPS.map((s, i) => (
+          <li key={s} data-state={i < step ? "done" : i === step ? "current" : "todo"} aria-current={i === step ? "step" : undefined}>
+            <span>{s}</span>
+          </li>
+        ))}
+      </ol>
       <Guard />
-      <label className="field">
-        <span>Nome completo *</span>
-        <input name="name" className="input" required autoComplete="name" maxLength={120} />
-      </label>
-      <div className="row">
-        <label className="field">
-          <span>E-mail *</span>
-          <input name="email" type="email" className="input" required autoComplete="email" maxLength={160} />
-        </label>
-        <label className="field">
-          <span>WhatsApp *</span>
-          <input name="phone" type="tel" className="input" required inputMode="tel" autoComplete="tel" placeholder="(11) 90000-0000" />
-        </label>
-      </div>
-      <div className="row">
-        <label className="field">
-          <span>Você é</span>
-          <select name="role" className="select" defaultValue="Síndico(a)">
-            <option>Síndico(a)</option>
-            <option>Síndico(a) profissional</option>
-            <option>Subsíndico(a)</option>
-            <option>Conselheiro(a)</option>
-            <option>Administradora</option>
-            <option>Gerente predial</option>
-            <option>Zelador(a)</option>
-            <option>Fornecedor</option>
-            <option>Patrocinador</option>
-            <option>Staff</option>
-            <option>Visitante</option>
-            <option>Outro</option>
-          </select>
-        </label>
-        <label className="field">
-          <span>Nº de unidades</span>
-          <input name="units" className="input" inputMode="numeric" maxLength={10} />
-        </label>
-      </div>
-      <div className="row">
-        <label className="field">
-          <span>Condomínio / empresa</span>
-          <input name="condo" className="input" maxLength={160} />
-        </label>
-        <label className="field">
-          <span>Cidade</span>
-          <input name="city" className="input" maxLength={80} />
-        </label>
-      </div>
+
+      <fieldset {...fs(0)}>
+        <div className="quote__body">
+          <div className="field">
+            <span>Você é:</span>
+            <div className="choice-grid" role="radiogroup" aria-label="Você é">
+              {FREE_ROLES.map((r, i) => (
+                <label key={r} className="choice">
+                  {/* avança sozinho ao escolher, como no pedido de orçamento */}
+                  <input type="radio" name="role" value={r} required={i === 0} onChange={() => setTimeout(() => goTo(1), 180)} />
+                  <Icon name={ROLE_ICONS[r]} size={18} /> {r}
+                </label>
+              ))}
+            </div>
+          </div>
+          {partners && (
+            <a href="#parceiros" className="reg__company">
+              <Icon name="briefcase" size={20} />
+              <span>
+                <b>Sou empresa ou fornecedor</b>
+                <small>Empresas participam como parceiras do evento. Veja como.</small>
+              </span>
+              <Icon name="arrowRight" size={18} />
+            </a>
+          )}
+        </div>
+      </fieldset>
+
+      <fieldset {...fs(1)}>
+        <div className="quote__body">
+          <label className="field">
+            <span>Nome completo *</span>
+            <input name="name" className="input" required autoComplete="name" maxLength={120} />
+          </label>
+          <label className="field">
+            <span>E-mail *</span>
+            <input name="email" type="email" className="input" required autoComplete="email" maxLength={160} />
+          </label>
+          <label className="field">
+            <span>WhatsApp *</span>
+            <input name="phone" type="tel" className="input" required inputMode="tel" autoComplete="tel" placeholder="(11) 90000-0000" />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset {...fs(2)}>
+        <div className="quote__body">
+          <label className="field">
+            <span>Nome do condomínio *</span>
+            <input name="condo" className="input" required minLength={2} maxLength={160} placeholder="Condomínio Edifício…" />
+          </label>
+          <div className="quote__row">
+            <label className="field">
+              <span>Nº de unidades</span>
+              <input name="units" className="input" inputMode="numeric" maxLength={10} />
+            </label>
+            <label className="field">
+              <span>Cidade</span>
+              <input name="city" className="input" maxLength={80} />
+            </label>
+          </div>
+        </div>
+      </fieldset>
+
       <Err state={state} />
-      <button className="btn btn--magenta btn--arrow" disabled={pending} style={{ justifySelf: "start" }}>
-        {pending ? "Enviando…" : "Confirmar inscrição"}
-        <span className="btn__dot">
-          <Icon name="check" size={15} />
+      <div className="quote__nav">
+        {step > 0 && (
+          <button key="back" type="button" className="btn btn--ghost" onClick={() => goTo(step - 1)}>
+            Voltar
+          </button>
+        )}
+        {step < REG_STEPS.length - 1 ? (
+          <button key="next" type="button" className="btn btn--yellow btn--arrow" onClick={next}>
+            Continuar
+            <span className="btn__dot">
+              <Icon name="arrowRight" size={16} />
+            </span>
+          </button>
+        ) : (
+          <button key="submit" type="submit" className="btn btn--yellow btn--arrow" disabled={pending}>
+            {pending ? "Enviando…" : "Confirmar inscrição"}
+            <span className="btn__dot">
+              <Icon name="check" size={15} />
+            </span>
+          </button>
+        )}
+      </div>
+      <div className="quote__trust">
+        <span>
+          <Icon name="check" size={14} /> Confirmação na hora
         </span>
-      </button>
+        <span>
+          <Icon name="shield" size={14} /> O e-mail dá acesso ao certificado
+        </span>
+      </div>
     </form>
   );
 }

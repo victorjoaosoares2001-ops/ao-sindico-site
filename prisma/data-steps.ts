@@ -650,6 +650,12 @@ async function main() {
     return `${created.length} novas` + (created.length ? `: ${created.join("; ")}` : "");
   });
 
+  //    Arte "Empresas, sejam parceiras!" do 8º Encontro (pedido da Luiza, 11/2026).
+  await step("arte-parceiros-8-encontro-v1", async () => {
+    const r = await db.event.updateMany({ where: { slug: "8-encontro-de-sindicos-de-guarulhos-e-regiao", partnerBanner: null }, data: { partnerBanner: "/eventos/8-encontro-parceiros.jpg" } });
+    return `${r.count} evento`;
+  });
+
   await migrateLegacyImages();
 
   // 9) Acesso da Luiza (equipe da cliente) para avaliar o painel. Só o hash da senha fica no código.

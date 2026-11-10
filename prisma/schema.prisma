@@ -272,6 +272,7 @@ model Event {
   registrationOpen Boolean             @default(true)
   capacity         Int?
   certificateUrl   String? // link do certificado, liberado para quem participou
+  partnerBanner    String? // arte "seja parceiro" para empresas, clicável para o WhatsApp
   published        Boolean             @default(true)
   sponsors         Partner[]           @relation("EventSponsors")
   registrations    EventRegistration[]

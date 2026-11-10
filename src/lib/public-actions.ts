@@ -7,6 +7,7 @@ import { sendQuietly } from "./email";
 import { getSettings } from "./settings";
 import { siteUrl } from "./site-url";
 import { whatsappLink } from "./format";
+import { FREE_ROLES, FREE_ROLES_TEXT } from "./event-roles";
 
 export type PublicFormState = { ok?: boolean; error?: string; message?: string; link?: string; protocol?: string };
 
@@ -245,6 +246,11 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
   const err = validContact(name, email, phone);
   if (err) return { error: err };
   if (!email) return { error: "Informe seu e-mail: ele é usado para o certificado." };
+  const role = get(form, "role", 60);
+  if (!(FREE_ROLES as readonly string[]).includes(role)) {
+    return { error: `A inscrição gratuita é exclusiva para ${FREE_ROLES_TEXT}. Empresas e fornecedores participam como parceiros: fale com a gente pelo WhatsApp.` };
+  }
+  if (!get(form, "condo", 160)) return { error: "Informe o nome do condomínio." };
   const exists = await db.eventRegistration.findFirst({ where: { eventId, email } });
   if (exists) return { ok: true, message: "Este e-mail já estava inscrito neste evento, por isso não entrou uma inscrição nova. Para inscrever outra pessoa, use outro e-mail." };
   await db.eventRegistration.create({
@@ -253,8 +259,8 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
       name,
       email,
       phone: phone || null,
-      role: get(form, "role", 60) || null,
-      condo: get(form, "condo", 160) || null,
+      role,
+      condo: get(form, "condo", 160),
       city: get(form, "city", 80) || null,
       units: get(form, "units", 20) || null,
     },

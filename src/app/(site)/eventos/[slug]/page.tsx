@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AgendaDetail } from "@/components/site/AgendaPages";
 import { db } from "@/lib/db";
+import { getSettings } from "@/lib/settings";
 
 type Params = Promise<{ slug: string }>;
 
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function EventPage({ params }: { params: Params }) {
-  const e = await load((await params).slug);
+  const [e, s] = await Promise.all([load((await params).slug), getSettings()]);
   if (!e) notFound();
-  return <AgendaDetail item={e} kind="evento" />;
+  return <AgendaDetail item={e} kind="evento" whatsapp={s.whatsapp} />;
 }
