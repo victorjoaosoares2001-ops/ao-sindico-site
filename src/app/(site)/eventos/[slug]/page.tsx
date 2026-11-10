@@ -22,3 +22,8 @@ export default async function EventPage({ params }: { params: Params }) {
   if (!e) notFound();
   return <AgendaDetail item={e} kind="evento" whatsapp={s.whatsapp} />;
 }
+
+// guarda cada página pronta (revalidate do layout) em vez de montar a cada visita
+export async function generateStaticParams() {
+  return [];
+}

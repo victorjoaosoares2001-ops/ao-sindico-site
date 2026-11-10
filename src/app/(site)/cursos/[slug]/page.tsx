@@ -17,3 +17,8 @@ export default async function CoursePage({ params }: { params: Params }) {
   if (!c) notFound();
   return <AgendaDetail item={c} kind="curso" />;
 }
+
+// guarda cada página pronta (revalidate do layout) em vez de montar a cada visita
+export async function generateStaticParams() {
+  return [];
+}

@@ -333,8 +333,8 @@ export function RegistrationForm({ action: bound, eventTitle, partners }: { acti
             <a href="#parceiros" className="reg__company">
               <Icon name="briefcase" size={20} />
               <span>
-                <b>Sou empresa ou fornecedor</b>
-                <small>Empresas participam como parceiras do evento. Veja como.</small>
+                <b>Sou empresa, fornecedor ou prestador de serviço</b>
+                <small>A inscrição gratuita não vale para empresas. Veja como participar como parceiro.</small>
               </span>
               <Icon name="arrowRight" size={18} />
             </a>

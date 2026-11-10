@@ -247,3 +247,8 @@ export default async function SupplierPage({ params }: { params: Params }) {
     </>
   );
 }
+
+// guarda cada página pronta (revalidate do layout) em vez de montar a cada visita
+export async function generateStaticParams() {
+  return [];
+}

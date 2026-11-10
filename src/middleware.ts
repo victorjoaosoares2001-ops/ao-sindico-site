@@ -19,10 +19,11 @@ export function middleware(req: NextRequest) {
     return res;
   }
 
-  // Site público: informa o caminho ao layout para montar o <link rel="canonical">
-  const headers = new Headers(req.headers);
-  headers.set("x-pathname", pathname);
-  return NextResponse.next({ request: { headers } });
+  // Site público: canonical no domínio oficial e sem parâmetros de filtro (cabeçalho Link, aceito pelo Google)
+  const res = NextResponse.next();
+  const base = process.env.SITE_URL || "https://aosindico.com";
+  res.headers.set("Link", `<${base}${pathname === "/" ? "" : pathname}>; rel="canonical"`);
+  return res;
 }
 
 export const config = {

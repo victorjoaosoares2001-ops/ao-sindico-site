@@ -8,9 +8,9 @@ import { getSettings } from "@/lib/settings";
 import { isAvailable, sectionAvailability } from "@/lib/sections";
 import "./site.css";
 
-// Renderiza a cada visita: o que a equipe salva no painel aparece no próximo carregamento,
-// e anúncios saem do ar exatamente na data final.
-export const dynamic = "force-dynamic";
+// Página guardada pronta por 1 minuto: montar tudo a cada visita estourou o limite de CPU da Vercel (11/2026).
+// O que a equipe salva no painel aparece na hora (as ações chamam revalidatePath/revalidateTag).
+export const revalidate = 60;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const [s, open] = await Promise.all([getSettings(), sectionAvailability()]);

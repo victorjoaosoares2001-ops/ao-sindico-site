@@ -115,26 +115,48 @@ export function AgendaDetail({ item, kind, whatsapp }: { item: EventFull | Cours
             {ev && !past && partnerHref && (
               <section className="card partner-cta" id="parceiros" data-has-art={!!ev.partnerBanner}>
                 {ev.partnerBanner && (
-                  <a href={partnerHref} target="_blank" rel="noopener" className="partner-cta__art" aria-label="Empresas: falar no WhatsApp sobre a parceria">
-                    <img src={ev.partnerBanner} alt={`${item.title}: empresas, sejam parceiras`} loading="lazy" />
-                    <span className="partner-cta__tap">
-                      <Icon name="whatsapp" size={18} /> Clique e fale com a gente
-                    </span>
-                  </a>
+                  <div className="partner-cta__media">
+                    <a href={partnerHref} target="_blank" rel="noopener" className="partner-cta__art" aria-label="Empresas: falar no WhatsApp sobre a parceria">
+                      <img src={ev.partnerBanner} alt={`${item.title}: empresas, sejam parceiras`} loading="lazy" />
+                    </a>
+                    <a href={partnerHref} target="_blank" rel="noopener" className="wa-btn wa-btn--float">
+                      <span className="wa-btn__icon">
+                        <Icon name="whatsapp" size={22} />
+                      </span>
+                      Falar no WhatsApp
+                    </a>
+                  </div>
                 )}
                 <div className="partner-cta__text">
                   <span className="chip chip--magenta">Empresas e fornecedores</span>
                   <h2>Sua empresa no evento</h2>
-                  <p>
-                    A inscrição gratuita é exclusiva para {FREE_ROLES_TEXT}. Empresas e fornecedores participam como <b>parceiros patrocinadores</b>, com divulgação da marca e contato direto com síndicos e gestores.
-                  </p>
-                  <p className="partner-cta__note">As condições de participação são combinadas com a nossa equipe.</p>
-                  <a href={partnerHref} target="_blank" rel="noopener" className="btn btn--magenta btn--arrow">
-                    Quero ser parceiro
-                    <span className="btn__dot">
-                      <Icon name="whatsapp" size={16} />
+                  <div className="partner-cta__notice" role="note">
+                    <span className="partner-cta__notice-icon">
+                      <Icon name="shield" size={18} />
                     </span>
+                    <p>
+                      <b>Importante para empresas:</b> a inscrição gratuita é exclusiva para {FREE_ROLES_TEXT}. Empresas, fornecedores e prestadores de serviço, mesmo os que atendem condomínios, participam <b>somente como parceiros patrocinadores</b>, com investimento combinado com a nossa equipe.
+                    </p>
+                  </div>
+                  <p>Como parceiro, sua empresa:</p>
+                  <ul className="partner-cta__perks">
+                    {["Amplie sua visibilidade", "Conecte-se com síndicos e gestores", "Gere novos negócios", "Fortaleça sua marca"].map((t) => (
+                      <li key={t}>
+                        <Icon name="check" size={14} /> {t}
+                      </li>
+                    ))}
+                  </ul>
+                  <a href={partnerHref} target="_blank" rel="noopener" className="wa-btn">
+                    <span className="wa-btn__icon">
+                      <Icon name="whatsapp" size={22} />
+                    </span>
+                    <span className="wa-btn__label">
+                      Quero ser parceiro
+                      <small>Fale no WhatsApp · {whatsapp || "(11) 94005-6720"}</small>
+                    </span>
+                    <Icon name="arrowRight" size={18} className="wa-btn__arrow" />
                   </a>
+                  <p className="partner-cta__note">As condições de participação são combinadas com a nossa equipe.</p>
                 </div>
               </section>
             )}

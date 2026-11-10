@@ -3775,22 +3775,69 @@ html.lite .marquee--logos .marquee__track {
 .partner-cta {
   display: grid;
   grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
-  gap: clamp(18px, 3vw, 32px);
+  gap: clamp(20px, 3.4vw, 40px);
   align-items: center;
   scroll-margin-top: 110px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(214, 40, 110, 0.07), transparent 55%),
+    radial-gradient(120% 90% at 0% 100%, rgba(20, 150, 160, 0.08), transparent 55%),
+    #fff;
+  box-shadow:
+    inset 0 0 0 1px rgba(20, 21, 24, 0.06),
+    0 1px 2px rgba(20, 21, 24, 0.04),
+    0 12px 28px -14px rgba(20, 21, 24, 0.18),
+    0 40px 70px -40px rgba(214, 40, 110, 0.25);
+}
+
+/* aviso para empresas: precisa saltar aos olhos sem parecer bronca */
+.partner-cta__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, #fff8e6, #fff1f6);
+  box-shadow:
+    inset 4px 0 0 var(--magenta),
+    inset 0 0 0 1px rgba(214, 40, 110, 0.18),
+    0 10px 24px -14px rgba(214, 40, 110, 0.45);
+}
+
+.partner-cta__notice p {
+  margin: 0;
+  color: var(--ink) !important;
+  font-size: 14.5px !important;
+  line-height: 1.5;
+}
+
+.partner-cta__notice-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--magenta);
+  color: #fff;
+  box-shadow: 0 6px 14px -6px rgba(214, 40, 110, 0.7);
 }
 
 .partner-cta[data-has-art="false"] {
   grid-template-columns: 1fr;
 }
 
+.partner-cta__media {
+  display: grid;
+  justify-items: center;
+}
+
 .partner-cta__art {
-  position: relative;
   display: block;
+  width: 100%;
   border-radius: var(--r-lg);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
-  cursor: pointer;
   transition:
     transform 0.3s var(--ease),
     box-shadow 0.3s var(--ease);
@@ -3802,53 +3849,14 @@ html.lite .marquee--logos .marquee__track {
   height: auto;
 }
 
-/* indicação de clique sempre visível (celular não tem hover), numa faixa abaixo da arte para não tapar nada */
-.partner-cta__tap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 14px;
-  background: #25d366;
-  color: #fff;
-  font-size: 14.5px;
-  font-weight: 700;
-}
-
-.partner-cta__tap svg {
-  animation: partner-tap 2.4s var(--ease) infinite;
-}
-
-.partner-cta__art:hover,
-.partner-cta__art:focus-visible {
+.partner-cta__art:hover {
   transform: translateY(-4px);
   box-shadow: 0 30px 60px -24px rgba(20, 21, 24, 0.55);
 }
 
-.partner-cta__art:focus-visible {
-  outline: 3px solid var(--teal);
-  outline-offset: 3px;
-}
-
-@keyframes partner-tap {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.25);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .partner-cta__tap svg {
-    animation: none;
-  }
-}
-
 .partner-cta__text {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   justify-items: start;
 }
 
@@ -3863,17 +3871,141 @@ html.lite .marquee--logos .marquee__track {
 }
 
 .partner-cta__note {
-  font-size: 14px !important;
+  font-size: 13.5px !important;
   color: var(--ink-3) !important;
+}
+
+.partner-cta__perks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px 16px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.partner-cta__perks li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.partner-cta__perks svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--teal-soft);
+  color: var(--teal-deep);
+}
+
+/* Botão de WhatsApp: verde da marca do WhatsApp, cara de botão (volume, sombra, ícone, seta) */
+.wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 9px 22px 9px 9px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2fe37e 0%, #1fb35a 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: left;
+  box-shadow:
+    0 14px 30px -12px rgba(31, 179, 90, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.14);
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease),
+    filter 0.2s;
+}
+
+.wa-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 20px 36px -12px rgba(31, 179, 90, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.14);
+}
+
+.wa-btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 8px 18px -10px rgba(31, 179, 90, 0.8),
+    inset 0 2px 4px rgba(0, 0, 0, 0.18);
+}
+
+.wa-btn:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
+
+.wa-btn__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.wa-btn__label {
+  display: grid;
+  gap: 2px;
+}
+
+.wa-btn__label small {
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.wa-btn__arrow {
+  margin-left: 6px;
+  transition: transform 0.2s var(--ease);
+}
+
+.wa-btn:hover .wa-btn__arrow {
+  transform: translateX(4px);
+}
+
+/* logo abaixo da arte, sem tapar a faixa de contato dela: deixa claro que a imagem leva ao WhatsApp */
+.wa-btn--float {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  padding-right: 24px;
+  box-shadow:
+    0 14px 30px -10px rgba(20, 21, 24, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.14);
 }
 
 @media (max-width: 640px) {
   .partner-cta {
     grid-template-columns: 1fr;
   }
-  .partner-cta__art {
+  .partner-cta__media {
     max-width: 360px;
     width: 100%;
     justify-self: center;
+  }
+  .partner-cta__perks {
+    grid-template-columns: 1fr;
+  }
+  .partner-cta__text .wa-btn {
+    width: 100%;
   }
 }

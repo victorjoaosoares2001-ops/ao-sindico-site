@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Plus_Jakarta_Sans } from "next/font/google";
-import { headers } from "next/headers";
 import { getSettings } from "@/lib/settings";
 import { isIndexable, siteUrl } from "@/lib/site-url";
 import "./globals.css";
@@ -11,11 +10,9 @@ const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["ita
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   const base = siteUrl();
-  // caminho vem do middleware; canonical sempre no domínio oficial e sem parâmetros de filtro
-  const path = (await headers()).get("x-pathname") ?? "/";
+  // canonical vai no cabeçalho HTTP (middleware): ler o caminho aqui deixaria todas as páginas dinâmicas
   return {
     metadataBase: new URL(base),
-    alternates: { canonical: `${base}${path === "/" ? "" : path}` || base },
     robots: isIndexable() ? undefined : { index: false, follow: false },
     title: { default: "Ao Síndico — orçamentos, fornecedores e conteúdo para condomínios", template: "%s | Ao Síndico" },
     description: s.seo_description,
