@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { FormState } from "@/admin/actions";
 import type { FieldDef } from "@/admin/resources";
 import { Icon } from "@/components/Icon";
@@ -60,6 +61,29 @@ function Rating({ f, value }: { f: FieldDef; value: string }) {
   );
 }
 
+/** Abre o cadastro em nova aba e, quando a pessoa volta, recarrega as opções (sem perder o que já foi digitado). */
+function AddLink({ href, label }: { href: string; label: string }) {
+  const router = useRouter();
+  const [opened, setOpened] = useState(false);
+  useEffect(() => {
+    if (!opened) return;
+    const onFocus = () => router.refresh();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [opened, router]);
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener"
+      onClick={() => setOpened(true)}
+      style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, fontWeight: 600, color: "var(--teal-deep)" }}
+    >
+      <Icon name="plus" size={14} /> {label}
+    </a>
+  );
+}
+
 function Field({ f, value, options }: { f: FieldDef; value: unknown; options?: { id: string; label: string }[] }) {
   const str = value === null || value === undefined ? "" : String(value);
   const label = (
@@ -103,6 +127,7 @@ function Field({ f, value, options }: { f: FieldDef; value: unknown; options?: {
             ))}
           </select>
           {hint}
+          {f.addLink && <AddLink {...f.addLink} />}
         </label>
       );
     case "relationMany": {

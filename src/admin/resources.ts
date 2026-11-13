@@ -40,6 +40,8 @@ export type FieldDef = {
   /** vai para a coluna lateral do formulário */
   side?: boolean;
   half?: boolean;
+  /** link "cadastrar novo" ao lado de um campo de relação (abre em nova aba) */
+  addLink?: { href: string; label: string };
   defaultValue?: string | boolean | number;
 };
 
@@ -124,7 +126,8 @@ const authorField: FieldDef = {
   type: "relation",
   relation: { model: "author", label: "name" },
   side: true,
-  hint: "Cadastre novos em Autores.",
+  hint: "Não está na lista? O cadastro abre em outra aba; ao voltar para cá, a lista se atualiza sozinha.",
+  addLink: { href: "/admin/autores/novo", label: "Cadastrar novo colunista" },
 };
 
 const publishedTabs: ListTab[] = [
@@ -365,7 +368,7 @@ export const RESOURCES: ResourceDef[] = [
     model: "author",
     module: "conteudo",
     singular: "autor",
-    plural: "Autores e colunistas",
+    plural: "Colunistas e autores",
     gender: "o",
     icon: "users",
     description: "Colunistas e especialistas com página própria no portal.",
