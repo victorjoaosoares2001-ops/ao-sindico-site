@@ -103,16 +103,35 @@ export default async function ArticlePage({ params }: { params: Params }) {
           <article>
             <div className="prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(a.content) }} />
             {a.authorRef ? (
-              <Link href={`/colunistas/${a.authorRef.slug}`} className="author-card" style={{ gridTemplateColumns: "56px minmax(0,1fr)", alignItems: "center", columnGap: 16 }}>
-                <span className="avatar" style={{ gridRow: "span 3" }}>
+              <div className="author-card" style={{ gridTemplateColumns: "72px minmax(0,1fr)", alignItems: "start", columnGap: 18 }}>
+                <span className="avatar" style={{ gridRow: "span 5", width: 72, height: 72 }}>
                   {a.authorRef.photo ? <img src={a.authorRef.photo} alt="" /> : initials(a.authorRef.name)}
                 </span>
                 <span className="meta" style={{ margin: 0 }}>
-                  <b>Colunista</b>
+                  <b>Sobre o colunista</b>
                 </span>
                 <strong>{a.authorRef.name}</strong>
-                {(a.authorRef.role || a.authorRef.bio) && <p>{a.authorRef.role ?? a.authorRef.bio?.slice(0, 220)}</p>}
-              </Link>
+                {a.authorRef.role && <p style={{ margin: 0, fontWeight: 600 }}>{a.authorRef.role}</p>}
+                {a.authorRef.bio && <p style={{ margin: "4px 0 0" }}>{a.authorRef.bio}</p>}
+                <p style={{ margin: "8px 0 0", display: "flex", flexWrap: "wrap", gap: "6px 16px", fontWeight: 600 }}>
+                  {a.authorRef.instagram && (
+                    <a href={a.authorRef.instagram} target="_blank" rel="noopener">
+                      Instagram
+                    </a>
+                  )}
+                  {a.authorRef.linkedin && (
+                    <a href={a.authorRef.linkedin} target="_blank" rel="noopener">
+                      LinkedIn
+                    </a>
+                  )}
+                  {a.authorRef.website && (
+                    <a href={a.authorRef.website} target="_blank" rel="noopener">
+                      Site
+                    </a>
+                  )}
+                  <Link href={`/colunistas/${a.authorRef.slug}`}>Ver todas as matérias de {a.authorRef.name.split(" ")[0]} →</Link>
+                </p>
+              </div>
             ) : (
               a.author && (
                 <div className="author-card">

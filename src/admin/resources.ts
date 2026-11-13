@@ -125,6 +125,9 @@ const authorQuickFields: FieldDef[] = [
   { name: "role", label: "Profissão / atuação", type: "text", placeholder: "Ex.: Advogada condominial" },
   { name: "bio", label: "Minibio (aparece no fim da matéria)", type: "textarea" },
   { name: "photo", label: "Foto", type: "image" },
+  { name: "instagram", label: "Instagram (link, opcional)", type: "url", placeholder: "instagram.com/..." },
+  { name: "linkedin", label: "LinkedIn (link, opcional)", type: "url", placeholder: "linkedin.com/in/..." },
+  { name: "website", label: "Site (opcional)", type: "url", placeholder: "www..." },
 ];
 
 const authorField: FieldDef = {
