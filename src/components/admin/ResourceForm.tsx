@@ -109,7 +109,7 @@ function RelationField({ f, value, options }: { f: FieldDef; value: string; opti
         </span>
       )}
       {f.hint && !done && <span className="hint">{f.hint}</span>}
-      <button type="button" className="btn btn--glass" style={{ marginTop: 8, width: "100%", justifyContent: "center" }} onClick={() => { setError(""); setOpen(true); }}>
+      <button type="button" className="btn btn--teal btn--block" style={{ marginTop: 8, justifyContent: "center" }} onClick={() => { setError(""); setOpen(true); }}>
         <Icon name="plus" /> {qa.button}
       </button>
       {open &&
@@ -137,7 +137,7 @@ function RelationField({ f, value, options }: { f: FieldDef; value: string; opti
                 ))}
               </div>
               <div className="save-bar__actions" style={{ marginTop: 16, justifyContent: "flex-end" }}>
-                <button type="button" className="btn btn--glass" onClick={() => setOpen(false)} disabled={saving}>
+                <button type="button" className="btn btn--ghost" onClick={() => setOpen(false)} disabled={saving}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn--yellow" disabled={saving}>
