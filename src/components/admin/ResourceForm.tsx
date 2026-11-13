@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import type { FormState } from "@/admin/actions";
+import { useActionState, useState } from "react";
+import { createPortal } from "react-dom";
+import { quickCreate, type FormState } from "@/admin/actions";
 import type { FieldDef } from "@/admin/resources";
 import { Icon } from "@/components/Icon";
 import { IconField, ImageField, MarkdownField, Switch } from "./Fields";
@@ -61,26 +61,94 @@ function Rating({ f, value }: { f: FieldDef; value: string }) {
   );
 }
 
-/** Abre o cadastro em nova aba e, quando a pessoa volta, recarrega as opções (sem perder o que já foi digitado). */
-function AddLink({ href, label }: { href: string; label: string }) {
-  const router = useRouter();
-  const [opened, setOpened] = useState(false);
-  useEffect(() => {
-    if (!opened) return;
-    const onFocus = () => router.refresh();
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, [opened, router]);
+type Option = { id: string; label: string };
+
+/**
+ * Lista de escolha com botão "cadastrar novo": abre uma janelinha por cima,
+ * salva o novo item sem sair da página e já deixa ele escolhido.
+ * A janelinha vai para o <body> (portal) porque formulário dentro de formulário não funciona.
+ */
+function RelationField({ f, value, options }: { f: FieldDef; value: string; options: Option[] }) {
+  const qa = f.quickAdd!;
+  const [list, setList] = useState(options);
+  const [selected, setSelected] = useState(value);
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState("");
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    const res = await quickCreate(qa.resource, new FormData(e.currentTarget));
+    setSaving(false);
+    if (res.error || !res.id) return setError(res.error ?? "Não foi possível salvar.");
+    setList((l) => [...l, { id: res.id!, label: res.label ?? "" }].sort((a, b) => a.label.localeCompare(b.label, "pt-BR")));
+    setSelected(res.id);
+    setDone(res.label ?? "");
+    setOpen(false);
+  }
+
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener"
-      onClick={() => setOpened(true)}
-      style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 6, fontWeight: 600, color: "var(--teal-deep)" }}
-    >
-      <Icon name="plus" size={14} /> {label}
-    </a>
+    <div className="field">
+      <span>
+        {f.label} {f.required && <span className="req">*</span>}
+      </span>
+      <select name={f.name} className="select" value={selected} onChange={(e) => setSelected(e.target.value)} required={f.required}>
+        <option value="">— Escolha —</option>
+        {list.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      {done && (
+        <span className="hint" style={{ color: "var(--teal-deep)", fontWeight: 600 }}>
+          <Icon name="check" size={13} style={{ display: "inline", verticalAlign: -2 }} /> {done} foi cadastrado e já está escolhido.
+        </span>
+      )}
+      {f.hint && !done && <span className="hint">{f.hint}</span>}
+      <button type="button" className="btn btn--glass" style={{ marginTop: 8, width: "100%", justifyContent: "center" }} onClick={() => { setError(""); setOpen(true); }}>
+        <Icon name="plus" /> {qa.button}
+      </button>
+      {open &&
+        createPortal(
+          <div className="quick-add" role="dialog" aria-modal="true" aria-label={qa.title} onClick={(e) => e.target === e.currentTarget && setOpen(false)}>
+            <form className="quick-add__box panel panel__pad" onSubmit={submit}>
+              <div className="quick-add__head">
+                <h2>{qa.title}</h2>
+                <button type="button" className="quick-add__close" aria-label="Fechar" onClick={() => setOpen(false)}>
+                  <Icon name="x" />
+                </button>
+              </div>
+              <p className="hint" style={{ marginTop: 0 }}>Preencha e clique em Salvar. Você volta direto para a matéria, com o colunista já escolhido.</p>
+              {error && (
+                <div className="alert alert--error" role="alert" style={{ marginBottom: 12 }}>
+                  <Icon name="x" /> {error}
+                </div>
+              )}
+              <input type="hidden" name="published" value="on" />
+              <div className="fields">
+                {qa.fields.map((qf) => (
+                  <div key={qf.name} className="full">
+                    <Field f={qf} value="" />
+                  </div>
+                ))}
+              </div>
+              <div className="save-bar__actions" style={{ marginTop: 16, justifyContent: "flex-end" }}>
+                <button type="button" className="btn btn--glass" onClick={() => setOpen(false)} disabled={saving}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn--yellow" disabled={saving}>
+                  <Icon name="check" /> {saving ? "Salvando…" : "Salvar colunista"}
+                </button>
+              </div>
+            </form>
+          </div>,
+          document.body,
+        )}
+    </div>
   );
 }
 
@@ -115,6 +183,7 @@ function Field({ f, value, options }: { f: FieldDef; value: unknown; options?: {
     case "select":
       return <SelectWithHint f={f} value={str} />;
     case "relation":
+      if (f.quickAdd) return <RelationField f={f} value={str} options={options ?? []} />;
       return (
         <label className="field">
           {label}
@@ -127,7 +196,6 @@ function Field({ f, value, options }: { f: FieldDef; value: unknown; options?: {
             ))}
           </select>
           {hint}
-          {f.addLink && <AddLink {...f.addLink} />}
         </label>
       );
     case "relationMany": {

@@ -1596,3 +1596,38 @@ a.mini-item:hover {
 .stars-input button[data-on="true"] svg {
   fill: currentColor;
 }
+/* Janelinha de cadastro rápido (ex.: novo colunista na tela da matéria) */
+.quick-add {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(10, 20, 30, 0.55);
+  backdrop-filter: blur(3px);
+}
+.quick-add__box {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+}
+.quick-add__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.quick-add__head h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.quick-add__close {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px;
+  color: inherit;
+}

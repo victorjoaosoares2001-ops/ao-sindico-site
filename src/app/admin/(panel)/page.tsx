@@ -44,6 +44,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     { href: "/admin/fornecedores/novo", label: "Cadastrar empresa", icon: "building", module: "comercial" },
     { href: "/admin/anuncios/novo", label: "Novo anúncio", icon: "megaphone", module: "comercial" },
     { href: "/admin/materias/novo", label: "Nova matéria", icon: "newspaper", module: "conteudo" },
+    { href: "/admin/autores/novo", label: "Novo colunista", icon: "users", module: "conteudo" },
     { href: "/admin/tira-duvidas?aba=pendente", label: "Responder perguntas", icon: "quote", module: "conteudo" },
     { href: "/admin/eventos/novo", label: "Novo evento", icon: "calendar", module: "agenda" },
     { href: "/admin/videos/novo", label: "Novo vídeo", icon: "youtube", module: "conteudo" },

@@ -40,8 +40,8 @@ export type FieldDef = {
   /** vai para a coluna lateral do formulário */
   side?: boolean;
   half?: boolean;
-  /** link "cadastrar novo" ao lado de um campo de relação (abre em nova aba) */
-  addLink?: { href: string; label: string };
+  /** botão "cadastrar novo" num campo de relação: abre uma janelinha e já seleciona o novo item */
+  quickAdd?: { resource: string; button: string; title: string; fields: FieldDef[] };
   defaultValue?: string | boolean | number;
 };
 
@@ -120,14 +120,21 @@ const slug: FieldDef = {
   hint: "Gerado automaticamente a partir do nome.",
 };
 
+const authorQuickFields: FieldDef[] = [
+  { name: "name", label: "Nome do colunista", type: "text", required: true, placeholder: "Ex.: Dra. Maria Souza" },
+  { name: "role", label: "Profissão / atuação", type: "text", placeholder: "Ex.: Advogada condominial" },
+  { name: "bio", label: "Minibio (aparece no fim da matéria)", type: "textarea" },
+  { name: "photo", label: "Foto", type: "image" },
+];
+
 const authorField: FieldDef = {
   name: "authorId",
-  label: "Autor / colunista",
+  label: "Colunista (quem escreveu)",
   type: "relation",
   relation: { model: "author", label: "name" },
   side: true,
-  hint: "Não está na lista? O cadastro abre em outra aba; ao voltar para cá, a lista se atualiza sozinha.",
-  addLink: { href: "/admin/autores/novo", label: "Cadastrar novo colunista" },
+  hint: "Escolha na lista. Se for alguém novo, clique no botão abaixo.",
+  quickAdd: { resource: "autores", button: "Cadastrar novo colunista", title: "Novo colunista", fields: authorQuickFields },
 };
 
 const publishedTabs: ListTab[] = [

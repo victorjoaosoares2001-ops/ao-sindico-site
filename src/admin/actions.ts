@@ -199,6 +199,23 @@ export async function saveResource(key: string, id: string | null, _: FormState,
   redirect(next);
 }
 
+/** Cadastro rápido dentro de outro formulário (ex.: colunista na tela da matéria). Não redireciona. */
+export async function quickCreate(key: string, form: FormData): Promise<{ id?: string; label?: string; error?: string }> {
+  const def = getResource(key);
+  if (!def) return { error: "Cadastro desconhecido." };
+  const user = await checkAdmin(def.module);
+  if (!user) return NO_PERMISSION;
+  try {
+    const row = await delegate(def.model).create({ data: await readFields(def, form, null) });
+    const label = String(row[def.titleField] ?? "");
+    await logAction(user, "criou", key, row.id, label);
+    refreshSite();
+    return { id: row.id, label };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Não foi possível salvar." };
+  }
+}
+
 export async function deleteResource(key: string, id: string) {
   const def = getResource(key);
   if (!def) return;
