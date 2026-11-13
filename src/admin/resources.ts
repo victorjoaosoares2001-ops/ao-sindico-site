@@ -374,7 +374,7 @@ export const RESOURCES: ResourceDef[] = [
     key: "autores",
     model: "author",
     module: "conteudo",
-    singular: "autor",
+    singular: "colunista",
     plural: "Colunistas e autores",
     gender: "o",
     icon: "users",
