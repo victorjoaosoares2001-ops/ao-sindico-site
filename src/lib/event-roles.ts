@@ -4,4 +4,7 @@
  */
 export const FREE_ROLES = ["Síndico(a)", "Síndico(a) profissional", "Subsíndico(a)", "Conselheiro(a)", "Administradora", "Gerente predial", "Zelador(a)"] as const;
 
+/** Quem cuida de vários condomínios: o condomínio é opcional e cabe uma lista (pedido de síndica profissional, 11/2026). */
+export const MULTI_CONDO_ROLES: readonly string[] = ["Síndico(a) profissional", "Administradora"];
+
 export const FREE_ROLES_TEXT = "síndicos, síndicos profissionais, subsíndicos, conselheiros, administradoras, gerentes prediais e zeladores";

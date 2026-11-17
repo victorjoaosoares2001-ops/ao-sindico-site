@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/Icon";
-import { FREE_ROLES } from "@/lib/event-roles";
+import { FREE_ROLES, MULTI_CONDO_ROLES } from "@/lib/event-roles";
 import {
   findCertificate,
   registerForEvent,
@@ -269,6 +269,8 @@ const ROLE_ICONS: Record<string, IconName> = {
 export function RegistrationForm({ action: bound, eventTitle, partners }: { action: (s: PublicFormState, f: FormData) => Promise<PublicFormState>; eventTitle: string; partners?: boolean }) {
   const [state, action, pending] = useActionState<PublicFormState, FormData>(bound, {});
   const [step, setStep] = useState(0);
+  const [role, setRole] = useState("");
+  const multi = MULTI_CONDO_ROLES.includes(role);
   const formRef = useRef<HTMLFormElement>(null);
   const refs = useRef<(HTMLFieldSetElement | null)[]>([]);
   if (state.ok)
@@ -323,7 +325,7 @@ export function RegistrationForm({ action: bound, eventTitle, partners }: { acti
               {FREE_ROLES.map((r, i) => (
                 <label key={r} className="choice">
                   {/* avança sozinho ao escolher, como no pedido de orçamento */}
-                  <input type="radio" name="role" value={r} required={i === 0} onChange={() => setTimeout(() => goTo(1), 180)} />
+                  <input type="radio" name="role" value={r} required={i === 0} onChange={() => { setRole(r); setTimeout(() => goTo(1), 180); }} />
                   <Icon name={ROLE_ICONS[r]} size={18} /> {r}
                 </label>
               ))}
@@ -361,20 +363,35 @@ export function RegistrationForm({ action: bound, eventTitle, partners }: { acti
 
       <fieldset {...fs(2)}>
         <div className="quote__body">
-          <label className="field">
-            <span>Nome do condomínio *</span>
-            <input name="condo" className="input" required minLength={2} maxLength={160} placeholder="Condomínio Edifício…" />
-          </label>
-          <div className="quote__row">
-            <label className="field">
-              <span>Nº de unidades</span>
-              <input name="units" className="input" inputMode="numeric" maxLength={10} />
-            </label>
-            <label className="field">
-              <span>Cidade</span>
-              <input name="city" className="input" maxLength={80} />
-            </label>
-          </div>
+          {multi ? (
+            <>
+              <label className="field">
+                <span>Condomínios que você administra (opcional)</span>
+                <textarea key="condo-multi" name="condo" className="textarea" rows={4} maxLength={3000} placeholder="Pode listar quantos quiser, ou deixar em branco." />
+              </label>
+              <label className="field">
+                <span>Cidade</span>
+                <input name="city" className="input" maxLength={80} />
+              </label>
+            </>
+          ) : (
+            <>
+              <label className="field">
+                <span>Nome do condomínio *</span>
+                <input key="condo-one" name="condo" className="input" required minLength={2} maxLength={160} placeholder="Condomínio Edifício…" />
+              </label>
+              <div className="quote__row">
+                <label className="field">
+                  <span>Nº de unidades</span>
+                  <input name="units" className="input" inputMode="numeric" maxLength={10} />
+                </label>
+                <label className="field">
+                  <span>Cidade</span>
+                  <input name="city" className="input" maxLength={80} />
+                </label>
+              </div>
+            </>
+          )}
         </div>
       </fieldset>
 
