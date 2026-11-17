@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { ContactForm } from "@/components/site/Forms";
 import { whatsappLink } from "@/lib/format";
-import { portalNumbers, PRO_SLUG } from "@/lib/queries";
+import { PRO_SLUG } from "@/lib/queries";
 import { getSettings, lines } from "@/lib/settings";
 import { PLACEMENTS } from "@/lib/placements";
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default async function AdvertisePage({ searchParams }: { searchParams: Promise<{ contato?: string; perfil?: string }> }) {
   const sp = await searchParams;
   if (sp.contato === "1") redirect("/contato"); // endereço antigo do Fale conosco
-  const [s, numbers] = await Promise.all([getSettings(), portalNumbers()]);
+  const s = await getSettings();
   const isContact = sp.contato === "1";
   const isPro = sp.perfil === "sindico";
   const formats = lines(s.advertise_formats);
@@ -84,11 +84,6 @@ export default async function AdvertisePage({ searchParams }: { searchParams: Pr
                     </div>
                   ))}
                 </div>
-                {(numbers.suppliers > 0 || numbers.articles > 0) && (
-                  <p style={{ marginTop: 22, fontSize: 14, color: "var(--ink-3)" }}>
-                    Hoje o portal reúne {numbers.suppliers} empresas no guia{numbers.pros ? `, ${numbers.pros} síndicos profissionais` : ""} e {numbers.articles} matérias publicadas.
-                  </p>
-                )}
               </>
             )}
             {wa && (
