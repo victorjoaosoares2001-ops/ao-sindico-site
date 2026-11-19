@@ -22,18 +22,6 @@ function Guard() {
   );
 }
 
-function Done({ message, title }: { message?: string; title: string }) {
-  return (
-    <div className="quote__done" role="status">
-      <span className="quote__done-icon">
-        <Icon name="check" size={26} />
-      </span>
-      <h2 style={{ fontSize: 24 }}>{title}</h2>
-      <p style={{ color: "var(--ink-2)" }}>{message}</p>
-    </div>
-  );
-}
-
 /**
  * Depois de gravar no painel, abre o WhatsApp da Ao Síndico com o resumo já escrito,
  * para a equipe receber direto no celular e direcionar a quem cuida.
