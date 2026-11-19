@@ -176,7 +176,8 @@ export async function subscribe(_: PublicFormState, form: FormData): Promise<Pub
   const email = get(form, "email", 160).toLowerCase();
   if (!EMAIL.test(email)) return { error: "Digite um e-mail válido." };
   await db.subscriber.upsert({ where: { email }, create: { email, name: get(form, "name", 120) || null }, update: {} });
-  return { ok: true, message: "Pronto! Você vai receber nossas novidades." };
+  const link = await teamWhatsapp(["*Newsletter*", "Quero receber as novidades do portal.", `E-mail: ${email}`]);
+  return { ok: true, link, message: "Pronto! Você vai receber nossas novidades." };
 }
 
 /** Tira-Dúvidas: pergunta vai para moderação no painel. */
@@ -230,7 +231,17 @@ export async function submitReview(supplierId: string, _: PublicFormState, form:
     data: { supplierId, name, email: email || null, condo: get(form, "condo", 160) || null, rating, comment: get(form, "comment", 2000) || null },
   });
   revalidatePath("/admin", "layout");
-  return { ok: true, message: "Obrigado! Sua avaliação será publicada após a conferência da nossa equipe." };
+  const supplierName = (await db.supplier.findUnique({ where: { id: supplierId }, select: { name: true } }))?.name;
+  const link = await teamWhatsapp([
+    "*Avaliação de empresa*",
+    `Empresa: ${supplierName}`,
+    `Nota: ${rating} de 5`,
+    get(form, "comment"),
+    `Nome: ${name}`,
+    get(form, "condo") && `Condomínio: ${get(form, "condo")}`,
+    email && `E-mail: ${email}`,
+  ]);
+  return { ok: true, link, message: "Obrigado! Sua avaliação será publicada após a conferência da nossa equipe." };
 }
 
 /** Inscrição em evento. */
@@ -284,7 +295,18 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
       .filter(Boolean)
       .join("\n\n"),
   });
-  return { ok: true, message: `Inscrição confirmada no ${event.title}. Guarde este e-mail: ele dá acesso ao certificado.` };
+  const link = await teamWhatsapp([
+    "*Inscrição no evento*",
+    event.title,
+    `Nome: ${name}`,
+    `Perfil: ${role}`,
+    condo && `Condomínio: ${condo}`,
+    get(form, "units") && `Unidades: ${get(form, "units")}`,
+    get(form, "city") && `Cidade: ${get(form, "city")}`,
+    `E-mail: ${email}`,
+    `WhatsApp: ${phone}`,
+  ]);
+  return { ok: true, link, message: `Inscrição confirmada no ${event.title}. Guarde este e-mail: ele dá acesso ao certificado.` };
 }
 
 /** Certificado: libera o link para quem foi marcado como presente. */

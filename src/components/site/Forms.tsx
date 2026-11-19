@@ -38,6 +38,16 @@ function Done({ message, title }: { message?: string; title: string }) {
  * Depois de gravar no painel, abre o WhatsApp da Ao Síndico com o resumo já escrito,
  * para a equipe receber direto no celular e direcionar a quem cuida.
  */
+/** Leva ao WhatsApp da equipe com o resumo já escrito (sem botão; usado na newsletter do rodapé). */
+function WaRedirect({ link }: { link?: string }) {
+  useEffect(() => {
+    if (!link) return;
+    const t = setTimeout(() => (window.location.href = link), 1200);
+    return () => clearTimeout(t);
+  }, [link]);
+  return null;
+}
+
 export function WhatsappDone({ message, title, link, children }: { message?: string; title: string; link?: string; children?: React.ReactNode }) {
   useEffect(() => {
     if (!link) return;
@@ -135,6 +145,7 @@ export function NewsletterForm() {
     return (
       <p className="alert alert--ok" role="status">
         <Icon name="check" /> {state.message}
+        <WaRedirect link={state.link} />
       </p>
     );
   }
@@ -213,7 +224,7 @@ export function QuestionForm({ sections }: { sections: { id: string; name: strin
 export function ReviewForm({ action: bound }: { action: (s: PublicFormState, f: FormData) => Promise<PublicFormState> }) {
   const [state, action, pending] = useActionState<PublicFormState, FormData>(bound, {});
   const [rating, setRating] = useState(5);
-  if (state.ok) return <Done title="Obrigado!" message={state.message} />;
+  if (state.ok) return <WhatsappDone title="Obrigado!" message={state.message} link={state.link} />;
   return (
     <form action={action} className="form-grid">
       <Guard />
@@ -276,7 +287,7 @@ export function RegistrationForm({ action: bound, eventTitle, partners }: { acti
   if (state.ok)
     return (
       <div className="card">
-        <Done title={state.message?.startsWith("Este e-mail já") ? "Você já está inscrito(a)" : "Inscrição confirmada!"} message={state.message} />
+        <WhatsappDone title={state.message?.startsWith("Este e-mail já") ? "Você já está inscrito(a)" : "Inscrição confirmada!"} message={state.message} link={state.link} />
       </div>
     );
 
