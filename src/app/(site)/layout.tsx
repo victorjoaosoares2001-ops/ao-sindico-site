@@ -10,7 +10,8 @@ import "./site.css";
 
 // Página guardada pronta por 1 minuto: montar tudo a cada visita estourou o limite de CPU da Vercel (11/2026).
 // O que a equipe salva no painel aparece na hora (as ações chamam revalidatePath/revalidateTag).
-export const revalidate = 60;
+// 1 h: o painel já atualiza na hora ao salvar (revalidatePath); 60 s mantinha o banco grátis sempre ligado e estourou a cota (11/2026)
+export const revalidate = 3600;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const [s, open] = await Promise.all([getSettings(), sectionAvailability()]);

@@ -35,7 +35,7 @@ const loadActiveCampaigns = unstable_cache((placement: string, take: number) => 
     orderBy: [{ order: "desc" }, { createdAt: "desc" }],
     take,
   });
-}, ["public-active-campaigns"], { revalidate: 60, tags: ["portal-content"] });
+}, ["public-active-campaigns"], { revalidate: 900, tags: ["portal-content"] });
 
 export function activeCampaigns(placement: string, take = 6) {
   return loadActiveCampaigns(placement, take);
