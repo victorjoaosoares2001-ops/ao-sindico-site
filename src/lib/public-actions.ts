@@ -161,14 +161,7 @@ export async function submitContact(_: PublicFormState, form: FormData): Promise
     `Contato: ${[phone, email].filter(Boolean).join(" · ")}`,
     `Abrir no painel: ${siteUrl()}/admin/mensagens`,
   ], email);
-  const link = await teamWhatsapp([
-    `*${get(form, "subject") || (type === "anunciar" ? "Quero anunciar" : "Contato pelo site")}*`,
-    `Nome: ${name}${get(form, "company") ? ` · ${get(form, "company")}` : ""}`,
-    `WhatsApp: ${phone}`,
-    get(form, "city") && `Cidade: ${get(form, "city")}`,
-    get(form, "body"),
-  ]);
-  return { ok: true, link, message: "Mensagem registrada! Toque em “Enviar pelo WhatsApp” para falar direto com a nossa equipe." };
+  return { ok: true, message: "Mensagem recebida! Nossa equipe responde em breve." };
 }
 
 export async function subscribe(_: PublicFormState, form: FormData): Promise<PublicFormState> {
@@ -176,8 +169,7 @@ export async function subscribe(_: PublicFormState, form: FormData): Promise<Pub
   const email = get(form, "email", 160).toLowerCase();
   if (!EMAIL.test(email)) return { error: "Digite um e-mail válido." };
   await db.subscriber.upsert({ where: { email }, create: { email, name: get(form, "name", 120) || null }, update: {} });
-  const link = await teamWhatsapp(["*Newsletter*", "Quero receber as novidades do portal.", `E-mail: ${email}`]);
-  return { ok: true, link, message: "Pronto! Você vai receber nossas novidades." };
+  return { ok: true, message: "Pronto! Você vai receber nossas novidades." };
 }
 
 /** Tira-Dúvidas: pergunta vai para moderação no painel. */
@@ -205,15 +197,8 @@ export async function submitQuestion(_: PublicFormState, form: FormData): Promis
     },
   });
   revalidatePath("/admin", "layout");
-  const link = await teamWhatsapp([
-    "*Tira-Dúvidas*",
-    `Pergunta: ${title}`,
-    get(form, "body"),
-    `Nome: ${askerName}`,
-    `WhatsApp: ${askerPhone}`,
-    get(form, "city") && `Cidade: ${get(form, "city")}`,
-  ]);
-  return { ok: true, link, message: "Pergunta registrada! Toque em “Enviar pelo WhatsApp” para falar direto com a nossa equipe." };
+  await notifyTeam(`Tira-Dúvidas: ${title}`, [get(form, "body"), `Nome: ${askerName}`, `WhatsApp: ${askerPhone}`, askerEmail && `E-mail: ${askerEmail}`, `${siteUrl()}/admin/tira-duvidas?aba=pendente`], askerEmail || undefined);
+  return { ok: true, message: "Pergunta registrada! Nossos especialistas respondem em breve." };
 }
 
 /** Avaliação de fornecedor: entra como pendente. */
@@ -232,16 +217,16 @@ export async function submitReview(supplierId: string, _: PublicFormState, form:
   });
   revalidatePath("/admin", "layout");
   const supplierName = (await db.supplier.findUnique({ where: { id: supplierId }, select: { name: true } }))?.name;
-  const link = await teamWhatsapp([
-    "*Avaliação de empresa*",
+  await notifyTeam(`Nova avaliação: ${supplierName}`, [
     `Empresa: ${supplierName}`,
     `Nota: ${rating} de 5`,
     get(form, "comment"),
     `Nome: ${name}`,
     get(form, "condo") && `Condomínio: ${get(form, "condo")}`,
     email && `E-mail: ${email}`,
+    `${siteUrl()}/admin/avaliacoes`,
   ]);
-  return { ok: true, link, message: "Obrigado! Sua avaliação será publicada após a conferência da nossa equipe." };
+  return { ok: true, message: "Obrigado! Sua avaliação será publicada após a conferência da nossa equipe." };
 }
 
 /** Inscrição em evento. */
@@ -279,7 +264,17 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
     },
   });
   revalidatePath("/admin", "layout");
-  await notifyTeam(`Nova inscrição: ${event.title}`, [`${name} · ${email} · ${phone}`, role, condo, `${siteUrl()}/admin/inscricoes`]);
+  await notifyTeam(`Nova inscrição: ${event.title}`, [
+    `*${event.title}*`,
+    `Nome: ${name}`,
+    `Perfil: ${role}`,
+    condo && `Condomínio: ${condo}`,
+    get(form, "units") && `Unidades: ${get(form, "units")}`,
+    get(form, "city") && `Cidade: ${get(form, "city")}`,
+    `E-mail: ${email}`,
+    `WhatsApp: ${phone}`,
+    `Todas as inscrições: ${siteUrl()}/admin/inscricoes`,
+  ], email);
   const when = event.startsAt
     ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "full" }).format(event.startsAt)
     : null;
@@ -295,18 +290,7 @@ export async function registerForEvent(eventId: string, _: PublicFormState, form
       .filter(Boolean)
       .join("\n\n"),
   });
-  const link = await teamWhatsapp([
-    "*Inscrição no evento*",
-    event.title,
-    `Nome: ${name}`,
-    `Perfil: ${role}`,
-    condo && `Condomínio: ${condo}`,
-    get(form, "units") && `Unidades: ${get(form, "units")}`,
-    get(form, "city") && `Cidade: ${get(form, "city")}`,
-    `E-mail: ${email}`,
-    `WhatsApp: ${phone}`,
-  ]);
-  return { ok: true, link, message: `Inscrição confirmada no ${event.title}. Guarde este e-mail: ele dá acesso ao certificado.` };
+  return { ok: true, message: `Inscrição confirmada no ${event.title}. Guarde este e-mail: ele dá acesso ao certificado.` };
 }
 
 /** Certificado: libera o link para quem foi marcado como presente. */

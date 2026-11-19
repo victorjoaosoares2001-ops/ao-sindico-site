@@ -40,7 +40,7 @@ export const SETTING_GROUPS = [
       {
         key: "notify_email",
         label: "E-mail(s) da equipe que recebem aviso de novos pedidos e mensagens",
-        default: "",
+        default: "luiza.uchoa@aosindico.com",
         hint: "Separe por vírgula. Só funciona com o envio de e-mail configurado na hospedagem.",
       },
     ],
