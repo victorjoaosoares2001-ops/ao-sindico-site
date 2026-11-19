@@ -4,6 +4,31 @@ import { marked } from "marked";
 import { useRef, useState } from "react";
 import { Icon, ICON_NAMES } from "@/components/Icon";
 
+/**
+ * Reduz a foto no navegador antes de enviar. A Vercel recusa envios acima de 4,5 MB (413) e o
+ * salvamento morria sem gravar nada (matérias da equipe sumindo, 11/2026). SVG e GIF passam intactos.
+ */
+async function shrinkImage(file: File): Promise<File> {
+  if (!/^image\/(jpeg|png|webp|heic|heif|bmp)$/.test(file.type) || file.size < 700_000) return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, 1920 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d")!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    for (const q of [0.85, 0.7, 0.55]) {
+      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/webp", q));
+      if (blob && blob.type === "image/webp" && blob.size < 2_500_000) return new File([blob], file.name.replace(/\.\w+$/, "") + ".webp", { type: "image/webp" });
+      const jpg = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", q));
+      if (jpg && jpg.size < 2_500_000) return new File([jpg], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
+    }
+  } catch {
+    /* navegador sem suporte: envia o original */
+  }
+  return file;
+}
+
 /** Campo de imagem: clique ou arraste; mostra prévia; permite remover ou colar link. */
 export function ImageField({ name, value, label, hint, required }: { name: string; value?: string | null; label: string; hint?: string; required?: boolean }) {
   const [preview, setPreview] = useState<string | null>(value || null);
@@ -12,10 +37,19 @@ export function ImageField({ name, value, label, hint, required }: { name: strin
   const [showUrl, setShowUrl] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const onFile = (f?: File | null) => {
+  const [busy, setBusy] = useState(false);
+  const onFile = async (f?: File | null) => {
     if (!f) return;
     setPreview(URL.createObjectURL(f));
     setRemove(false);
+    setBusy(true);
+    const small = await shrinkImage(f);
+    if (small !== f && fileRef.current) {
+      const dt = new DataTransfer();
+      dt.items.add(small);
+      fileRef.current.files = dt.files;
+    }
+    setBusy(false);
   };
 
   return (
@@ -39,7 +73,7 @@ export function ImageField({ name, value, label, hint, required }: { name: strin
           <span className="img-drop__empty">
             <Icon name="upload" size={24} />
             <strong>Clique ou arraste uma imagem</strong>
-            JPG, PNG ou WEBP até 6 MB
+            JPG, PNG ou WEBP (fotos grandes são reduzidas sozinhas)
           </span>
         )}
         <input ref={fileRef} type="file" name={`${name}__file`} accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} />
@@ -64,6 +98,7 @@ export function ImageField({ name, value, label, hint, required }: { name: strin
           <Icon name="link" size={15} /> {showUrl ? "Esconder link" : "Usar link"}
         </button>
       </div>
+      {busy && <span className="hint">Preparando a imagem…</span>}
       {hint && <span className="hint">{hint}</span>}
     </div>
   );
