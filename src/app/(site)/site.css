@@ -2145,7 +2145,8 @@
    tamanho real (ficava borrada). Separada do cabeçalho escuro. */
 .article-cover {
   width: fit-content;
-  max-width: min(100%, 880px);
+  /* 720 px = largura do texto; em telas com zoom (125–150%) a arte de ~1000 px ainda é reduzida, não esticada */
+  max-width: min(100%, 720px);
   margin: clamp(28px, 4vw, 44px) auto 0;
   border-radius: var(--r-xl);
   overflow: hidden;
