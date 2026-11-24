@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
   // Endereços do site antigo → novos (preserva links compartilhados e o Google)
   async redirects() {
     return [
+      // Formulário do site antigo aberto em alguma aba: leva à inscrição nova (303 = abre a página, não reenvia)
+      { source: "/eu-no-evento/:path*", destination: "/eventos", statusCode: 303 },
       { source: "/informe/:slug", destination: "/informe-se/:slug", permanent: true },
       { source: "/informe-se/:secao(convivencia|dicas|financas|juridico|legislacao|manutencao|mercado-imobiliario|noticias|seguranca)", destination: "/informe-se?secao=:secao", permanent: true },
       { source: "/fornecedor/:slug", destination: "/fornecedores/:slug", permanent: true },
